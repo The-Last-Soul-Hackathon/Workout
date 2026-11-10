@@ -76,7 +76,7 @@ export interface MuscleHead {
 
 export interface Muscle {
   id: string;
-  muscleGroupId: MuscleRegion;
+  muscleGroupId?: MuscleRegion;
   region: MuscleRegion;
   name: string;
   latinName?: string;
