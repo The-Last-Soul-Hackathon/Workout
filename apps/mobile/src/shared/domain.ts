@@ -192,7 +192,7 @@ export interface SetLog {
   holdSeconds?: number;
   distanceMeters?: number;
   flightsClimbed?: number;
-  side: 'bilateral' | 'left' | 'right';
+  side: 'bilateral' | 'left' | 'right' | 'both_sides' | 'each_side';
   rir?: number; // Repetitions in Reserve (0-5)
   rpe?: number; // Rating of Perceived Exertion (1-10)
   restSeconds?: number;
