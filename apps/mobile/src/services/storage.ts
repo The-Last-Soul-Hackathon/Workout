@@ -127,7 +127,76 @@ export const storageService = {
       ],
     };
 
+    const sampleMobilitySession: WorkoutSession = {
+      id: 'sample_session_round_23',
+      roundTemplateId: 'round_23',
+      name: 'Round 23 — Dynamic Flow (Mobility)',
+      startedAt: new Date(Date.now() - 86400000).toISOString(),
+      endedAt: new Date(Date.now() - 86400000 + 1200000).toISOString(),
+      durationSeconds: 1200,
+      completed: true,
+      notes: 'Full vinyasa mobility sequence. Deep opening in hamstrings, calves, and thoracic spine.',
+      sets: [
+        {
+          id: 'set_r23_1',
+          sessionId: 'sample_session_round_23',
+          exerciseId: 'surya_namaskar',
+          setNumber: 1,
+          reps: 5,
+          side: 'bilateral',
+          techniqueQuality: 'good',
+          completedAt: new Date(Date.now() - 86400000 + 300000).toISOString(),
+          synced: true,
+        },
+        {
+          id: 'set_r23_2',
+          sessionId: 'sample_session_round_23',
+          exerciseId: 'tadasana',
+          setNumber: 1,
+          holdSeconds: 30,
+          side: 'bilateral',
+          techniqueQuality: 'good',
+          completedAt: new Date(Date.now() - 86400000 + 500000).toISOString(),
+          synced: true,
+        },
+        {
+          id: 'set_r23_3',
+          sessionId: 'sample_session_round_23',
+          exerciseId: 'ardha_uttanasana',
+          setNumber: 1,
+          holdSeconds: 30,
+          side: 'bilateral',
+          techniqueQuality: 'good',
+          completedAt: new Date(Date.now() - 86400000 + 700000).toISOString(),
+          synced: true,
+        },
+        {
+          id: 'set_r23_4',
+          sessionId: 'sample_session_round_23',
+          exerciseId: 'adho_mukha_svanasana',
+          setNumber: 1,
+          holdSeconds: 45,
+          side: 'bilateral',
+          techniqueQuality: 'good',
+          completedAt: new Date(Date.now() - 86400000 + 900000).toISOString(),
+          synced: true,
+        },
+        {
+          id: 'set_r23_5',
+          sessionId: 'sample_session_round_23',
+          exerciseId: 'cat_cow_stretch',
+          setNumber: 1,
+          reps: 10,
+          side: 'bilateral',
+          techniqueQuality: 'good',
+          completedAt: new Date(Date.now() - 86400000 + 1100000).toISOString(),
+          synced: true,
+        },
+      ],
+    };
+
     await this.saveSession(sampleSession);
-    return [sampleSession];
+    await this.saveSession(sampleMobilitySession);
+    return [sampleSession, sampleMobilitySession];
   },
 };
