@@ -53,7 +53,7 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
       {
         value: number;
         rir: number;
-        side: 'bilateral' | 'left' | 'right';
+        side: 'bilateral' | 'left' | 'right' | 'both_sides';
         techniqueQuality: TechniqueQuality;
       }
     >
@@ -126,11 +126,16 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
       sets: [...prev.sets, newSet],
     }));
 
-    // If unilateral, flip side from left to right automatically
+    // If unilateral, flip side between left and right automatically for alternating sets
     if (exercise.unilateral && input.side === 'left') {
       setExerciseInputs((prev) => ({
         ...prev,
         [exercise.id]: { ...prev[exercise.id], side: 'right' },
+      }));
+    } else if (exercise.unilateral && input.side === 'right') {
+      setExerciseInputs((prev) => ({
+        ...prev,
+        [exercise.id]: { ...prev[exercise.id], side: 'left' },
       }));
     }
 
@@ -358,6 +363,27 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                           ]}
                         >
                           Right
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.sideBtn,
+                          input.side === 'both_sides' && styles.sideBtnActive,
+                        ]}
+                        onPress={() =>
+                          setExerciseInputs((prev) => ({
+                            ...prev,
+                            [ex.id]: { ...input, side: 'both_sides' },
+                          }))
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.sideBtnText,
+                            input.side === 'both_sides' && styles.sideBtnTextActive,
+                          ]}
+                        >
+                          Both Sides
                         </Text>
                       </TouchableOpacity>
                     </View>
