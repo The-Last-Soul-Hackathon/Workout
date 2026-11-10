@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -19,16 +20,30 @@ import { LiveWorkoutLogger } from './LiveWorkoutLogger';
 
 interface WorkoutsScreenProps {
   sessions: WorkoutSession[];
+  initialRoundId?: string | null;
   onSessionFinished: (session: WorkoutSession) => void;
 }
 
 export const WorkoutsScreen: React.FC<WorkoutsScreenProps> = ({
   sessions,
+  initialRoundId,
   onSessionFinished,
 }) => {
   const [activeTab, setActiveTab] = useState<'rounds' | 'history'>('rounds');
+  const [roundFilter, setRoundFilter] = useState<'all' | 'strength' | 'mobility' | 'accessory'>('all');
+  const [roundSearch, setRoundSearch] = useState('');
   const [selectedRoundForLive, setSelectedRoundForLive] = useState<RoundTemplate | null>(null);
   const [isLiveActive, setIsLiveActive] = useState(false);
+
+  useEffect(() => {
+    if (initialRoundId) {
+      const found = canonicalRounds.find((r) => r.id === initialRoundId);
+      if (found) {
+        setSelectedRoundForLive(found);
+        setIsLiveActive(true);
+      }
+    }
+  }, [initialRoundId]);
 
   const handleStartRound = (round: RoundTemplate) => {
     setSelectedRoundForLive(round);
@@ -57,6 +72,24 @@ export const WorkoutsScreen: React.FC<WorkoutsScreenProps> = ({
   const getExerciseName = (id: string) => {
     return canonicalExercises.find((e) => e.id === id)?.name || id.replace(/_/g, ' ');
   };
+
+  const filteredRounds = canonicalRounds.filter((r) => {
+    const matchesFilter =
+      roundFilter === 'all' ||
+      (roundFilter === 'strength' && r.type === 'strength_conditioning') ||
+      (roundFilter === 'mobility' && r.type === 'mobility') ||
+      (roundFilter === 'accessory' && r.type === 'accessory_balance');
+
+    const searchLower = roundSearch.toLowerCase();
+    const matchesSearch =
+      !roundSearch ||
+      r.name.toLowerCase().includes(searchLower) ||
+      r.description.toLowerCase().includes(searchLower) ||
+      `round ${r.roundNumber}`.includes(searchLower) ||
+      r.exercises.some((item) => getExerciseName(item.exerciseId).toLowerCase().includes(searchLower));
+
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <View style={styles.container}>
@@ -97,6 +130,37 @@ export const WorkoutsScreen: React.FC<WorkoutsScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      {/* Round Filter & Search Bar when in Rounds tab */}
+      {activeTab === 'rounds' && (
+        <View style={styles.filterSection}>
+          <TextInput
+            style={styles.roundSearchInput}
+            placeholder="Search rounds (e.g. Round 23, flow, pull-up, squats)..."
+            placeholderTextColor={colors.textMuted}
+            value={roundSearch}
+            onChangeText={setRoundSearch}
+          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.roundCategoryScroll}>
+            {[
+              { id: 'all', label: `All (${canonicalRounds.length})` },
+              { id: 'strength', label: 'Strength (1–22)' },
+              { id: 'mobility', label: 'Mobility Flow (23–25)' },
+              { id: 'accessory', label: 'Accessory (26)' },
+            ].map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.roundChip, roundFilter === cat.id && styles.roundChipActive]}
+                onPress={() => setRoundFilter(cat.id as any)}
+              >
+                <Text style={[styles.roundChipText, roundFilter === cat.id && styles.roundChipTextActive]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Content Area */}
       <ScrollView
         style={styles.body}
@@ -105,48 +169,88 @@ export const WorkoutsScreen: React.FC<WorkoutsScreenProps> = ({
         {activeTab === 'rounds' ? (
           /* ROUND TEMPLATES */
           <View>
-            <Text style={styles.sectionHeader}>
-              Standard 5-Movement Conditioning & Strength Circuits
-            </Text>
-
-            {canonicalRounds.map((round) => (
-              <View key={round.id} style={styles.roundCard}>
-                <View style={styles.roundHeaderRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.roundNumber}>
-                      ROUND {round.roundNumber} • {round.type.toUpperCase().replace('_', ' ')}
-                    </Text>
-                    <Text style={styles.roundName}>{round.name}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.startRoundBtn}
-                    onPress={() => handleStartRound(round)}
-                  >
-                    <Text style={styles.startRoundBtnText}>Start →</Text>
-                  </TouchableOpacity>
+            <View style={styles.roundCountRow}>
+              <Text style={styles.sectionHeader}>
+                Showing {filteredRounds.length} of {canonicalRounds.length} Rounds
+              </Text>
+              {roundFilter === 'mobility' && (
+                <View style={styles.mobilityNotice}>
+                  <Text style={styles.mobilityNoticeText}>🌿 Dynamic Flows & Mobility Sequences</Text>
                 </View>
+              )}
+            </View>
 
-                <Text style={styles.roundDesc}>{round.description}</Text>
-
-                {/* Exercises in this round */}
-                <View style={styles.roundExercisesList}>
-                  {round.exercises.map((item, idx) => (
-                    <View key={idx} style={styles.roundExRow}>
-                      <Text style={styles.roundExCategory}>
-                        {item.category.toUpperCase()}:
-                      </Text>
-                      <Text style={styles.roundExName}>
-                        {getExerciseName(item.exerciseId)}
-                      </Text>
-                      <Text style={styles.roundExValue}>
-                        {item.defaultValue} {item.unit}
-                        {item.sideRule === 'each_side' ? ' / side' : ''}
-                      </Text>
+            {filteredRounds.length === 0 ? (
+              <Text style={styles.emptyText}>No matching rounds found.</Text>
+            ) : (
+              filteredRounds.map((round) => (
+                <View
+                  key={round.id}
+                  style={[
+                    styles.roundCard,
+                    round.type === 'mobility' && styles.roundCardMobility,
+                    round.roundNumber === 23 && styles.roundCardHighlight23,
+                  ]}
+                >
+                  <View style={styles.roundHeaderRow}>
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.badgeRow}>
+                        <Text
+                          style={[
+                            styles.roundNumber,
+                            round.type === 'mobility' && styles.roundNumberMobility,
+                          ]}
+                        >
+                          ROUND {round.roundNumber} • {round.type.toUpperCase().replace(/_/g, ' ')}
+                        </Text>
+                        {round.roundNumber === 23 && (
+                          <View style={styles.tag23}>
+                            <Text style={styles.tag23Text}>VINYASA FLOW</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.roundName}>{round.name}</Text>
                     </View>
-                  ))}
+                    <TouchableOpacity
+                      style={[
+                        styles.startRoundBtn,
+                        round.type === 'mobility' && styles.startRoundBtnMobility,
+                      ]}
+                      onPress={() => handleStartRound(round)}
+                    >
+                      <Text
+                        style={[
+                          styles.startRoundBtnText,
+                          round.type === 'mobility' && styles.startRoundBtnTextMobility,
+                        ]}
+                      >
+                        Start →
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.roundDesc}>{round.description}</Text>
+
+                  {/* Exercises in this round */}
+                  <View style={styles.roundExercisesList}>
+                    {round.exercises.map((item, idx) => (
+                      <View key={idx} style={styles.roundExRow}>
+                        <Text style={styles.roundExCategory}>
+                          {item.category.toUpperCase()}:
+                        </Text>
+                        <Text style={styles.roundExName}>
+                          {getExerciseName(item.exerciseId)}
+                        </Text>
+                        <Text style={styles.roundExValue}>
+                          {item.defaultValue} {item.unit}
+                          {item.sideRule === 'each_side' ? ' / side' : ''}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         ) : (
           /* SESSION LOGS HISTORY */
@@ -374,5 +478,99 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: spacing.xl,
+  },
+  filterSection: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  roundSearchInput: {
+    backgroundColor: colors.cardBg,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    color: colors.textPrimary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 13,
+    marginBottom: spacing.xs,
+  },
+  roundCategoryScroll: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  roundChip: {
+    backgroundColor: colors.cardBg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    marginRight: spacing.xs,
+  },
+  roundChipActive: {
+    backgroundColor: colors.accentPrimary,
+    borderColor: colors.accentPrimary,
+  },
+  roundChipText: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  roundChipTextActive: {
+    color: colors.textInverse,
+    fontWeight: '700',
+  },
+  roundCountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  mobilityNotice: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  mobilityNoticeText: {
+    color: colors.coverageInTarget,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  roundCardMobility: {
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  roundCardHighlight23: {
+    borderWidth: 1.5,
+    borderColor: colors.coverageInTarget,
+    backgroundColor: '#0f1f1a',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  roundNumberMobility: {
+    color: colors.coverageInTarget,
+  },
+  tag23: {
+    backgroundColor: colors.coverageInTarget,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: borderRadius.sm,
+  },
+  tag23Text: {
+    color: colors.textInverse,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  startRoundBtnMobility: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  startRoundBtnTextMobility: {
+    color: colors.coverageInTarget,
   },
 });
