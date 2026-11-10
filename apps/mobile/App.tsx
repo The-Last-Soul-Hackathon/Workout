@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import {
   colors,
   spacing,
@@ -139,8 +140,15 @@ export default function App() {
           <TouchableOpacity
             style={[styles.navItem, activeTab === 'overview' && styles.navItemActive]}
             onPress={() => setActiveTab('overview')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'overview' }}
+            accessibilityLabel="Overview Dashboard"
           >
-            <Text style={styles.navIcon}>⚡</Text>
+            <Ionicons
+              name={activeTab === 'overview' ? 'grid' : 'grid-outline'}
+              size={20}
+              color={activeTab === 'overview' ? colors.accentPrimary : colors.textMuted}
+            />
             <Text style={[styles.navLabel, activeTab === 'overview' && styles.navLabelActive]}>
               Overview
             </Text>
@@ -149,8 +157,15 @@ export default function App() {
           <TouchableOpacity
             style={[styles.navItem, activeTab === 'muscles' && styles.navItemActive]}
             onPress={() => setActiveTab('muscles')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'muscles' }}
+            accessibilityLabel="Muscle Anatomy Explorer"
           >
-            <Text style={styles.navIcon}>🧬</Text>
+            <Ionicons
+              name={activeTab === 'muscles' ? 'body' : 'body-outline'}
+              size={20}
+              color={activeTab === 'muscles' ? colors.accentPrimary : colors.textMuted}
+            />
             <Text style={[styles.navLabel, activeTab === 'muscles' && styles.navLabelActive]}>
               Muscles
             </Text>
@@ -159,8 +174,15 @@ export default function App() {
           <TouchableOpacity
             style={[styles.navItem, activeTab === 'exercises' && styles.navItemActive]}
             onPress={() => setActiveTab('exercises')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'exercises' }}
+            accessibilityLabel="Exercise Library"
           >
-            <Text style={styles.navIcon}>📖</Text>
+            <Ionicons
+              name={activeTab === 'exercises' ? 'barbell' : 'barbell-outline'}
+              size={20}
+              color={activeTab === 'exercises' ? colors.accentPrimary : colors.textMuted}
+            />
             <Text style={[styles.navLabel, activeTab === 'exercises' && styles.navLabelActive]}>
               Exercises
             </Text>
@@ -169,8 +191,15 @@ export default function App() {
           <TouchableOpacity
             style={[styles.navItem, activeTab === 'workouts' && styles.navItemActive]}
             onPress={() => setActiveTab('workouts')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'workouts' }}
+            accessibilityLabel="Training Routines"
           >
-            <Text style={styles.navIcon}>🏋️</Text>
+            <Ionicons
+              name={activeTab === 'workouts' ? 'flame' : 'flame-outline'}
+              size={20}
+              color={activeTab === 'workouts' ? colors.accentPrimary : colors.textMuted}
+            />
             <Text style={[styles.navLabel, activeTab === 'workouts' && styles.navLabelActive]}>
               Training
             </Text>
@@ -179,8 +208,15 @@ export default function App() {
           <TouchableOpacity
             style={[styles.navItem, activeTab === 'analysis' && styles.navItemActive]}
             onPress={() => setActiveTab('analysis')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'analysis' }}
+            accessibilityLabel="Workload and Coverage Analysis"
           >
-            <Text style={styles.navIcon}>📊</Text>
+            <Ionicons
+              name={activeTab === 'analysis' ? 'stats-chart' : 'stats-chart-outline'}
+              size={20}
+              color={activeTab === 'analysis' ? colors.accentPrimary : colors.textMuted}
+            />
             <Text style={[styles.navLabel, activeTab === 'analysis' && styles.navLabelActive]}>
               Analysis
             </Text>
@@ -228,28 +264,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgSecondary,
     borderTopWidth: 1,
     borderTopColor: colors.cardBorder,
-    paddingVertical: spacing.xs,
-    paddingBottom: spacing.sm,
+    paddingVertical: 6,
+    paddingBottom: 10,
     justifyContent: 'space-around',
     alignItems: 'center',
   },
   navItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 4,
     paddingHorizontal: 8,
+    minWidth: 60,
+    minHeight: 48,
     borderRadius: borderRadius.sm,
   },
   navItemActive: {
     backgroundColor: 'rgba(56, 189, 248, 0.12)',
   },
-  navIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
   navLabel: {
     color: colors.textMuted,
     fontSize: 10,
     fontWeight: '600',
+    marginTop: 2,
   },
   navLabelActive: {
     color: colors.accentPrimary,
