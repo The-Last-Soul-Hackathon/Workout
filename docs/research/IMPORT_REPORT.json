@@ -1,0 +1,222 @@
+{
+  "timestamp": "2026-11-10T11:13:26.266Z",
+  "source": "Kinetic Exercises Database (MIT)",
+  "totalProcessed": 8,
+  "autoLinkedCount": 2,
+  "flaggedReviewCount": 5,
+  "stagedNewCount": 1,
+  "rejectedCount": 0,
+  "autoLinkedExercises": [
+    {
+      "candidateName": "Diamond Push-up",
+      "canonicalId": "pushup_diamond",
+      "similarityScore": 0.905,
+      "rationale": "High confidence match with canonical \"Diamond Push-ups\" (pushup_diamond). Name sim: 0.76, Pattern match: 1, Muscle Jaccard: 1.00"
+    },
+    {
+      "candidateName": "Pike Push-up",
+      "canonicalId": "pushup_pike",
+      "similarityScore": 0.902,
+      "rationale": "High confidence match with canonical \"Pike Push-ups\" (pushup_pike). Name sim: 0.75, Pattern match: 1, Muscle Jaccard: 1.00"
+    }
+  ],
+  "reviewQueueItems": [
+    {
+      "id": "rev-kinetic-push-up",
+      "externalSourceId": "kinetic",
+      "originalRecordId": "kinetic-push-up",
+      "candidateExerciseName": "Push-up",
+      "candidatePayload": {
+        "id": "kinetic-push-up",
+        "name": "Push Up",
+        "target": "pectorals",
+        "bodyPart": "chest",
+        "equipment": "body weight",
+        "secondaryMuscles": [
+          "triceps",
+          "deltoids",
+          "abdominals"
+        ],
+        "instructions": [
+          "Place your hands shoulder-width apart on the floor.",
+          "Maintain a straight line from heels to head.",
+          "Lower your chest until elbows reach 90 degrees.",
+          "Push forcefully back to full arm extension."
+        ]
+      },
+      "mappedCanonicalId": "pushup_standard",
+      "suggestedSimilarityScore": 0.772,
+      "status": "pending",
+      "conflictSummary": "Potential variation or conflicting classification with \"Standard Push-up\". Routed to scientific review queue. Name sim: 0.53, Pattern match: 1, Muscle Jaccard: 0.80",
+      "reviewerNotes": "Flagged for expert review. Overlaps with Standard Push-up (77.2%).",
+      "createdAt": "2026-11-10T11:13:26.275Z"
+    },
+    {
+      "id": "rev-kinetic-pull-up",
+      "externalSourceId": "kinetic",
+      "originalRecordId": "kinetic-pull-up",
+      "candidateExerciseName": "Pull-up",
+      "candidatePayload": {
+        "id": "kinetic-pull-up",
+        "name": "Pull Up",
+        "target": "lats",
+        "bodyPart": "back",
+        "equipment": "pull-up bar",
+        "secondaryMuscles": [
+          "biceps",
+          "middle back",
+          "forearms"
+        ],
+        "instructions": [
+          "Grasp the bar with an overhand grip slightly wider than shoulders.",
+          "Hang with arms fully extended.",
+          "Pull yourself upward until your chin clears the bar.",
+          "Lower with control back to dead hang."
+        ]
+      },
+      "mappedCanonicalId": "pullup_standard",
+      "suggestedSimilarityScore": 0.732,
+      "status": "pending",
+      "conflictSummary": "Potential variation or conflicting classification with \"Standard Pull-up\". Routed to scientific review queue. Name sim: 0.53, Pattern match: 1, Muscle Jaccard: 0.60",
+      "reviewerNotes": "Flagged for expert review. Overlaps with Standard Pull-up (73.2%).",
+      "createdAt": "2026-11-10T11:13:26.278Z"
+    },
+    {
+      "id": "rev-kinetic-bodyweight-squat",
+      "externalSourceId": "kinetic",
+      "originalRecordId": "kinetic-bodyweight-squat",
+      "candidateExerciseName": "Bodyweight Squat",
+      "candidatePayload": {
+        "id": "kinetic-bodyweight-squat",
+        "name": "Bodyweight Squat",
+        "target": "quads",
+        "bodyPart": "upper legs",
+        "equipment": "body weight",
+        "secondaryMuscles": [
+          "glutes",
+          "calves",
+          "hamstrings"
+        ],
+        "instructions": [
+          "Stand with feet shoulder-width apart, toes slightly turned out.",
+          "Hinge at hips and bend knees downward.",
+          "Descend until thigh is parallel to ground.",
+          "Drive through mid-foot to stand upright."
+        ]
+      },
+      "mappedCanonicalId": "squat_bodyweight",
+      "suggestedSimilarityScore": 0.879,
+      "status": "pending",
+      "conflictSummary": "Potential variation or conflicting classification with \"Bodyweight Squats\". Routed to scientific review queue. Name sim: 0.70, Pattern match: 1, Muscle Jaccard: 1.00",
+      "reviewerNotes": "Flagged for expert review. Overlaps with Bodyweight Squats (87.9%).",
+      "createdAt": "2026-11-10T11:13:26.283Z"
+    },
+    {
+      "id": "rev-kinetic-crunch",
+      "externalSourceId": "kinetic",
+      "originalRecordId": "kinetic-crunch",
+      "candidateExerciseName": "Standard Crunch",
+      "candidatePayload": {
+        "id": "kinetic-crunch",
+        "name": "Standard Crunch",
+        "target": "abdominals",
+        "bodyPart": "waist",
+        "equipment": "body weight",
+        "secondaryMuscles": [
+          "obliques"
+        ],
+        "instructions": [
+          "Lie supine with knees bent and feet flat.",
+          "Contract abdominal wall to curl ribcage toward hips.",
+          "Lower back with control."
+        ]
+      },
+      "mappedCanonicalId": "crunches_standard",
+      "suggestedSimilarityScore": 0.865,
+      "status": "pending",
+      "conflictSummary": "Potential variation or conflicting classification with \"Standard Crunches\". Routed to scientific review queue. Name sim: 0.66, Pattern match: 1, Muscle Jaccard: 1.00",
+      "reviewerNotes": "Flagged for expert review. Overlaps with Standard Crunches (86.5%).",
+      "createdAt": "2026-11-10T11:13:26.293Z"
+    },
+    {
+      "id": "rev-kinetic-glute-bridge",
+      "externalSourceId": "kinetic",
+      "originalRecordId": "kinetic-glute-bridge",
+      "candidateExerciseName": "Glute Bridge",
+      "candidatePayload": {
+        "id": "kinetic-glute-bridge",
+        "name": "Glute Bridge",
+        "target": "glutes",
+        "bodyPart": "upper legs",
+        "equipment": "body weight",
+        "secondaryMuscles": [
+          "hamstrings",
+          "lower back"
+        ],
+        "instructions": [
+          "Lie supine with knees bent, feet flat on the floor.",
+          "Drive through heels to lift hips until thighs and torso align.",
+          "Squeeze glutes at top and lower slowly."
+        ]
+      },
+      "mappedCanonicalId": "glute_bridges",
+      "suggestedSimilarityScore": 0.808,
+      "status": "pending",
+      "conflictSummary": "Potential variation or conflicting classification with \"Glute Bridges\". Routed to scientific review queue. Name sim: 0.69, Pattern match: 1, Muscle Jaccard: 0.67",
+      "reviewerNotes": "Flagged for expert review. Overlaps with Glute Bridges (80.80000000000001%).",
+      "createdAt": "2026-11-10T11:13:26.303Z"
+    }
+  ],
+  "stagedExercises": [
+    {
+      "id": "parallel_bar_dips",
+      "name": "Parallel Bar Dips",
+      "category": "push",
+      "primaryCategory": "push",
+      "movementPatterns": [
+        "horizontal_push"
+      ],
+      "difficulty": "beginner",
+      "equipment": [
+        "dip_station"
+      ],
+      "defaultUnit": "reps",
+      "unilateral": false,
+      "instructions": "Support yourself on parallel bars with straight arms.\nLower body by bending elbows until shoulders reach 90 degrees.\nPush upward to lockout.",
+      "isCanonical": false,
+      "muscleMappings": [
+        {
+          "muscleId": "triceps_brachii",
+          "role": "primary",
+          "coefficient": 1,
+          "jointAction": "elbow extension",
+          "evidenceCategory": "expert_inference",
+          "confidence": "moderate",
+          "confidenceScore": 0.7,
+          "notes": "Derived from Kinetic source target: \"triceps\"."
+        },
+        {
+          "muscleId": "pectoralis_major_sternal",
+          "role": "secondary",
+          "coefficient": 0.5,
+          "jointAction": "shoulder horizontal adduction",
+          "evidenceCategory": "expert_inference",
+          "confidence": "low",
+          "confidenceScore": 0.5,
+          "notes": "Derived from Kinetic secondary muscle listing."
+        },
+        {
+          "muscleId": "deltoid_anterior",
+          "role": "secondary",
+          "coefficient": 0.5,
+          "jointAction": "shoulder flexion / horizontal adduction",
+          "evidenceCategory": "expert_inference",
+          "confidence": "low",
+          "confidenceScore": 0.5,
+          "notes": "Derived from Kinetic secondary muscle listing."
+        }
+      ]
+    }
+  ],
+  "rejectedRecords": []
+}
