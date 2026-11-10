@@ -69,7 +69,9 @@ export class ExerciseMatcher {
       }
     }
 
-    if (highestScore >= this.AUTO_LINK_THRESHOLD && bestCanonicalMatch) {
+    const isAutoLink = highestScore >= this.AUTO_LINK_THRESHOLD || (highestScore >= 0.80 && bestRationale.includes('Name sim: 1.00'));
+
+    if (isAutoLink && bestCanonicalMatch) {
       return {
         decision: 'auto_link',
         similarityScore: highestScore,
