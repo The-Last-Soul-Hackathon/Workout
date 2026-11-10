@@ -21,7 +21,7 @@ interface DashboardScreenProps {
   exposures: MuscleExposure[];
   gaps: CoverageGap[];
   onNavigateToMuscles: (muscleId?: string) => void;
-  onNavigateToWorkouts: () => void;
+  onNavigateToWorkouts: (roundId?: string) => void;
   onNavigateToAnalysis: () => void;
 }
 
@@ -53,7 +53,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={styles.brandSubtitle}>BODYWEIGHT TRAINING PLATFORM</Text>
           <Text style={styles.brandTitle}>Muscle Intelligence</Text>
         </View>
-        <TouchableOpacity style={styles.quickStartBtn} onPress={onNavigateToWorkouts}>
+        <TouchableOpacity style={styles.quickStartBtn} onPress={() => onNavigateToWorkouts()}>
           <Text style={styles.quickStartBtnText}>+ Workout</Text>
         </TouchableOpacity>
       </View>
@@ -78,6 +78,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </Text>
           <Text style={styles.metricLabel}>Plan Status</Text>
         </View>
+      </View>
+
+      {/* Featured Routine Highlight */}
+      <View style={styles.featuredCard}>
+        <View style={styles.featuredTag}>
+          <Text style={styles.featuredTagText}>FEATURED MOBILITY ROUTINE</Text>
+        </View>
+        <Text style={styles.featuredTitle}>Round 23 — Dynamic Flow Mobility</Text>
+        <Text style={styles.featuredDesc}>
+          Full 5-movement vinyasa flow: Surya Namaskar, Tadasana, Ardha Uttanasana, Downward Dog, and Cat–Cow for whole-body posterior chain release.
+        </Text>
+        <TouchableOpacity
+          style={styles.featuredBtn}
+          onPress={() => onNavigateToWorkouts('round_23')}
+        >
+          <Text style={styles.featuredBtnText}>Start Round 23 Now →</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Whole Body Coverage & Interactive Anatomy Map */}
@@ -177,7 +194,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Recent Sessions */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>Recent Sessions</Text>
-        <TouchableOpacity onPress={onNavigateToWorkouts}>
+        <TouchableOpacity onPress={() => onNavigateToWorkouts()}>
           <Text style={styles.sectionLink}>View All →</Text>
         </TouchableOpacity>
       </View>
@@ -426,5 +443,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  featuredCard: {
+    backgroundColor: '#0d221c',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  featuredTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.xs,
+  },
+  featuredTagText: {
+    color: colors.coverageInTarget,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  featuredTitle: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  featuredDesc: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: spacing.sm,
+  },
+  featuredBtn: {
+    backgroundColor: colors.coverageInTarget,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: borderRadius.sm,
+  },
+  featuredBtnText: {
+    color: colors.textInverse,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
