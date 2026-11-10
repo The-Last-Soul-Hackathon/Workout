@@ -1,3 +1,6 @@
+// Canonical Domain Types & Models
+// Muscle Intelligence — Cross-Platform Scientific Data Foundation
+
 export type MuscleRegion =
   | 'chest'
   | 'back'
@@ -10,7 +13,7 @@ export type MuscleRegion =
   | 'calves_feet'
   | 'neck';
 
-export type MuscleRole = 'primary' | 'synergist' | 'secondary' | 'stabiliser' | 'incidental';
+export type MuscleRole = 'primary' | 'secondary' | 'synergist' | 'stabiliser' | 'incidental';
 
 export type MovementPattern =
   | 'vertical_pull'
@@ -40,29 +43,86 @@ export type EvidenceClassification =
   | 'modelled'
   | 'assumed';
 
-export interface Muscle {
+/**
+ * The 8 Canonical Scientific Evidence Categories
+ * Mandated to prevent confusing EMG, force estimation, and longitudinal hypertrophy.
+ */
+export type ScientificEvidenceCategory =
+  | 'anatomical_evidence'
+  | 'biomechanical_evidence'
+  | 'emg_excitation_evidence'
+  | 'muscle_force_estimation'
+  | 'longitudinal_hypertrophy'
+  | 'strength_performance'
+  | 'fatigue_recovery'
+  | 'expert_inference';
+
+export interface MuscleGroup {
+  id: MuscleRegion;
+  name: string;
+  description: string;
+  displayOrder: number;
+}
+
+export interface MuscleHead {
   id: string;
+  muscleId: string;
   name: string;
   latinName?: string;
+  fiberOrientation?: string;
+  origin?: string;
+  insertion?: string;
+}
+
+export interface Muscle {
+  id: string;
+  muscleGroupId?: MuscleRegion;
   region: MuscleRegion;
+  name: string;
+  latinName?: string;
+  fmaId?: string; // Foundational Model of Anatomy identifier
   description: string;
+  origin?: string;
+  insertion?: string;
+  innervation?: string;
   actions: string[];
   anatomicalHeads?: string[];
   lateralitySupported: boolean;
-  defaultWeeklyTargetMin: number;
-  defaultWeeklyTargetMax: number;
+  defaultWeeklyTargetMin: number; // e.g. 8.0 direct sets
+  defaultWeeklyTargetMax: number; // e.g. 16.0 direct sets
+}
+
+export interface AnatomicalAction {
+  id: string;
+  muscleId: string;
+  jointAction: string;
+  leverageAdvantage: 'primary_agonist' | 'synergist' | 'fixator';
+}
+
+export interface AnatomicalStructure {
+  id: string;
+  muscleId: string;
+  svgElementIdFront?: string;
+  svgElementIdBack?: string;
+  meshIdentifier3d?: string;
+  centroidXNorm?: number;
+  centroidYNorm?: number;
 }
 
 export interface ExerciseMuscleMapping {
   muscleId: string;
   muscleHeadId?: string;
   role: MuscleRole;
-  coefficient: number;
+  coefficient: number; // 1.0 = primary, 0.5 = synergist, 0.2 = stabiliser, 0.0 = incidental
   jointAction: string;
-  evidenceType: 'direct_emg' | 'biomechanical_inference' | 'anatomy_inference' | 'intervention_study' | 'expert_consensus';
+  evidenceCategory?: ScientificEvidenceCategory;
+  evidenceType?: 'direct_emg' | 'biomechanical_inference' | 'anatomy_inference' | 'intervention_study' | 'expert_consensus';
   confidence: EvidenceConfidence;
+  confidenceScore?: number; // 0.0 - 1.0
   notes: string;
   sourceIds?: string[];
+  reviewedBy?: string;
+  reviewedAt?: string;
 }
 
 export type ExerciseCategory =
@@ -74,10 +134,18 @@ export type ExerciseCategory =
   | 'mobility'
   | 'accessory';
 
+export interface ExerciseVariation {
+  baseExerciseId: string;
+  variationExerciseId: string;
+  variationType: 'grip_width' | 'stance' | 'elevation' | 'tempo' | 'leverage';
+  description?: string;
+}
+
 export interface Exercise {
   id: string;
   name: string;
   category: ExerciseCategory;
+  primaryCategory?: ExerciseCategory;
   movementPatterns: MovementPattern[];
   difficulty: DifficultyLevel;
   equipment: string[];
@@ -88,6 +156,8 @@ export interface Exercise {
   regressions?: string[];
   progressions?: string[];
   safetyCautions?: string;
+  isCanonical?: boolean;
+  isUserCustom?: boolean;
   muscleMappings: ExerciseMuscleMapping[];
 }
 
@@ -106,6 +176,7 @@ export interface RoundTemplate {
   name: string;
   type: 'strength_conditioning' | 'mobility' | 'accessory_balance';
   description: string;
+  isCanonical?: boolean;
   exercises: RoundExerciseItem[];
 }
 
@@ -114,22 +185,26 @@ export type TechniqueQuality = 'good' | 'acceptable' | 'degraded';
 export interface SetLog {
   id: string;
   sessionId: string;
+  userId?: string;
   exerciseId: string;
   setNumber: number;
   reps?: number;
   holdSeconds?: number;
-  side: 'bilateral' | 'left' | 'right' | 'each_side';
-  rir?: number;
-  rpe?: number;
+  distanceMeters?: number;
+  flightsClimbed?: number;
+  side: 'bilateral' | 'left' | 'right';
+  rir?: number; // Repetitions in Reserve (0-5)
+  rpe?: number; // Rating of Perceived Exertion (1-10)
   restSeconds?: number;
   techniqueQuality: TechniqueQuality;
   notes?: string;
   completedAt: string;
-  synced: boolean;
+  synced?: boolean;
 }
 
 export interface WorkoutSession {
   id: string;
+  userId?: string;
   roundTemplateId?: string;
   name: string;
   startedAt: string;
@@ -138,6 +213,114 @@ export interface WorkoutSession {
   notes?: string;
   completed: boolean;
   sets: SetLog[];
+}
+
+export interface SourceLicense {
+  id: string;
+  fullName: string;
+  isCommercialAllowed: boolean;
+  requiresShareAlike: boolean;
+  requiresAttribution: boolean;
+  isCopyleftViral: boolean;
+  licenseUrl?: string;
+}
+
+export interface ExternalSource {
+  id: string;
+  licenseId: string;
+  name: string;
+  url: string;
+  attributionText: string;
+}
+
+export interface ResearchStudy {
+  id: string;
+  externalSourceId?: string;
+  externalRecordId?: string;
+  doi?: string;
+  pmid?: string;
+  openalexId?: string;
+  title: string;
+  authors: string[];
+  publicationYear: number;
+  journal?: string;
+  abstract?: string;
+  studyType?: string;
+  openAccessUrl?: string;
+  isOpenAccess: boolean;
+  isPeerReviewed: boolean;
+  evidenceCategory?: ScientificEvidenceCategory;
+}
+
+export interface StudyProtocol {
+  id: string;
+  studyId: string;
+  sampleSize?: number;
+  maleParticipants?: number;
+  femaleParticipants?: number;
+  trainingStatus?: string;
+  electrodeBrandModel?: string;
+  emgNormalizationMethod?: string;
+  samplingRateHz?: number;
+  movementTempo?: string;
+  rangeOfMotionSpecification?: string;
+}
+
+export interface StudyFinding {
+  id: string;
+  studyId: string;
+  exerciseName?: string;
+  targetMuscleOrGroup?: string;
+  findingText: string;
+  effectSize?: string;
+  statisticalSignificance?: string;
+  methodologicalLimitations?: string;
+}
+
+export interface EvidenceMeasurement {
+  id: string;
+  studyFindingId: string;
+  metricName: string;
+  metricValue: number;
+  metricVariance?: number;
+  metricUnit: string;
+  measurementPhase?: string;
+}
+
+export interface EvidenceReview {
+  id: string;
+  externalSourceId: string;
+  originalRecordId: string;
+  candidateExerciseName: string;
+  candidatePayload: Record<string, unknown>;
+  mappedCanonicalId?: string;
+  suggestedSimilarityScore?: number;
+  status: 'pending' | 'approved' | 'rejected' | 'modified';
+  conflictSummary?: string;
+  reviewerNotes?: string;
+  reviewerId?: string;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+export interface ModelVersion {
+  id: string;
+  name: string;
+  domain: 'exposure' | 'biomechanics' | 'fatigue' | 'progression';
+  versionTag: string;
+  formulaDefinition: string;
+  latexRepresentation?: string;
+  scientificBasis: string;
+  isActive: boolean;
+}
+
+export interface ModelParameter {
+  id: string;
+  modelVersionId: string;
+  parameterKey: string;
+  parameterValue: number;
+  unit?: string;
+  description?: string;
 }
 
 export interface ModelOutput<T> {
@@ -187,7 +370,7 @@ export interface CoverageGap {
 export interface ExerciseComparison {
   exerciseA: Exercise;
   exerciseB: Exercise;
-  similarityScore: number;
+  similarityScore: number; // 0.0 - 1.0
   sharedMuscles: Array<{
     muscleId: string;
     muscleName: string;
