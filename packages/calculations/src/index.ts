@@ -51,11 +51,11 @@ export function calculateWeeklyExposure(
         const acc = exposureMap.get(mapping.muscleId);
         if (!acc) continue;
 
-        const effectiveSets = set.side === 'each_side' ? 2 : 1;
+        const effectiveSets = (set.side as string) === 'each_side' ? 2 : 1;
 
         if (mapping.role === 'primary') {
           acc.directSets += effectiveSets;
-        } else if (mapping.role === 'synergist' || mapping.role === 'stabiliser') {
+        } else if (mapping.role === 'secondary' || mapping.role === 'synergist' || mapping.role === 'stabiliser') {
           acc.indirectSets += effectiveSets * mapping.coefficient;
         }
 
