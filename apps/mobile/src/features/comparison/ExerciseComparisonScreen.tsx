@@ -13,6 +13,7 @@ import {
   canonicalExercises,
   Exercise,
   compareExercises,
+  SubstitutionFeasibility,
 } from '../../shared';
 
 interface ExerciseComparisonScreenProps {
@@ -39,12 +40,62 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
 
   const comparison = compareExercises(exerciseA, exerciseB);
 
+  // Feasibility UI configuration
+  const getFeasibilityConfig = (feasibility: SubstitutionFeasibility) => {
+    switch (feasibility) {
+      case 'direct_equivalent':
+        return {
+          label: 'DIRECT BIOMECHANICAL EQUIVALENT',
+          color: colors.success,
+          bg: 'rgba(16, 185, 129, 0.15)',
+          description:
+            'Target muscles, joint moments and movement patterns align closely. High functional interchangeability.',
+        };
+      case 'regression_suitable':
+        return {
+          label: 'SUITABLE DELOAD REGRESSION',
+          color: colors.info,
+          bg: 'rgba(59, 130, 246, 0.15)',
+          description:
+            'Shares core motor patterns with reduced leverage or stability demand. Ideal entry point or deload substitute.',
+        };
+      case 'progression_suitable':
+        return {
+          label: 'SUITABLE OVERLOAD PROGRESSION',
+          color: '#8B5CF6',
+          bg: 'rgba(139, 92, 246, 0.15)',
+          description:
+            'Increases torque, unilateral coordination, or stability demand. Progressive overload advancement.',
+        };
+      case 'partial_complement':
+        return {
+          label: 'PARTIAL COMPLEMENT',
+          color: colors.warning,
+          bg: 'rgba(245, 158, 11, 0.15)',
+          description:
+            'Recruits overlapping muscle groups at different joint angles or contraction modes. Useful complement, not a 1:1 substitute.',
+        };
+      case 'biomechanically_incompatible':
+      default:
+        return {
+          label: 'BIOMECHANICALLY INCOMPATIBLE',
+          color: colors.danger,
+          bg: 'rgba(239, 68, 68, 0.15)',
+          description:
+            'Distinct primary movement planes and joint actions. Cannot serve as an interchangeable substitute.',
+        };
+    }
+  };
+
+  const feasibilityConfig = getFeasibilityConfig(comparison.substitutionFeasibility);
+  const scores = comparison.scores;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.subtitle}>SIDE-BY-SIDE BIOMECHANICAL ANALYSIS</Text>
+          <Text style={styles.subtitle}>5-DIMENSIONAL BIOMECHANICAL ANALYSIS</Text>
           <Text style={styles.title}>Exercise Comparison</Text>
         </View>
         {onClose && (
@@ -60,7 +111,7 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
           style={[styles.selectorCard, pickerTarget === 'A' && styles.selectorCardActive]}
           onPress={() => setPickerTarget(pickerTarget === 'A' ? null : 'A')}
         >
-          <Text style={styles.selectorTargetLabel}>EXERCISE A (TAP TO SWAP)</Text>
+          <Text style={styles.selectorTargetLabel}>EXERCISE A (TAP TO CHANGE)</Text>
           <Text style={styles.selectorExerciseName}>{exerciseA.name}</Text>
           <Text style={styles.selectorSub}>
             {exerciseA.difficulty.toUpperCase()} • {exerciseA.category.toUpperCase()}
@@ -75,7 +126,7 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
           style={[styles.selectorCard, pickerTarget === 'B' && styles.selectorCardActive]}
           onPress={() => setPickerTarget(pickerTarget === 'B' ? null : 'B')}
         >
-          <Text style={styles.selectorTargetLabel}>EXERCISE B (TAP TO SWAP)</Text>
+          <Text style={styles.selectorTargetLabel}>EXERCISE B (TAP TO CHANGE)</Text>
           <Text style={styles.selectorExerciseName}>{exerciseB.name}</Text>
           <Text style={styles.selectorSub}>
             {exerciseB.difficulty.toUpperCase()} • {exerciseB.category.toUpperCase()}
@@ -89,7 +140,7 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
           <Text style={styles.pickerTitle}>
             Select Exercise for Slot {pickerTarget}:
           </Text>
-          <ScrollView style={{ maxHeight: 180 }}>
+          <ScrollView style={{ maxHeight: 200 }}>
             {canonicalExercises.map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -101,29 +152,159 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
                 }}
               >
                 <Text style={styles.pickerItemText}>{item.name}</Text>
-                <Text style={styles.pickerItemCategory}>{item.category}</Text>
+                <Text style={styles.pickerItemCategory}>
+                  {item.category.toUpperCase()} • {item.difficulty}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
       )}
 
-      {/* Similarity Score Banner */}
-      <View style={styles.similarityCard}>
-        <View style={styles.similarityScoreCircle}>
-          <Text style={styles.similarityScoreVal}>
-            {Math.round(comparison.similarityScore * 100)}%
+      {/* Feasibility Classification Banner */}
+      <View style={styles.feasibilityCard}>
+        <View style={[styles.feasibilityBadge, { backgroundColor: feasibilityConfig.bg }]}>
+          <Text style={[styles.feasibilityBadgeText, { color: feasibilityConfig.color }]}>
+            {feasibilityConfig.label}
           </Text>
-          <Text style={styles.similarityScoreSub}>SIMILARITY</Text>
         </View>
-        <View style={styles.similarityInfo}>
-          <Text style={styles.similarityRecommendation}>
-            {comparison.practicalRecommendation}
+
+        <View style={styles.feasibilityRow}>
+          <View style={styles.similarityScoreCircle}>
+            <Text style={styles.similarityScoreVal}>
+              {Math.round(comparison.similarityScore * 100)}%
+            </Text>
+            <Text style={styles.similarityScoreSub}>COMPOSITE</Text>
+          </View>
+          <View style={styles.feasibilityTextCol}>
+            <Text style={styles.feasibilityDesc}>{feasibilityConfig.description}</Text>
+            <Text style={styles.practicalRecommendation}>
+              {comparison.practicalRecommendation}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 5-Dimensional Kinematic Scoring Breakdown */}
+      <View style={styles.card}>
+        <Text style={styles.cardSectionTitle}>5-Dimensional Kinematic Analysis</Text>
+        <Text style={styles.cardSectionSub}>
+          Substitutions are evaluated across physiological roles, joint actions, ROM, stability and progression links:
+        </Text>
+
+        {/* Dimension 1: Muscle Role & Evidence */}
+        <View style={styles.dimensionRow}>
+          <View style={styles.dimensionHeader}>
+            <Text style={styles.dimensionLabel}>1. Muscle Roles & Evidence</Text>
+            <Text style={styles.dimensionVal}>
+              {Math.round(scores.muscleRoleAndEvidence * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.round(scores.muscleRoleAndEvidence * 100)}%`,
+                  backgroundColor: colors.accentPrimary,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Dimension 2: Movement Pattern & Joint Kinematics */}
+        <View style={styles.dimensionRow}>
+          <View style={styles.dimensionHeader}>
+            <Text style={styles.dimensionLabel}>2. Movement Pattern & Joint Actions</Text>
+            <Text style={styles.dimensionVal}>
+              {Math.round(scores.movementPatternAndJointActions * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.round(scores.movementPatternAndJointActions * 100)}%`,
+                  backgroundColor: colors.info,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Dimension 3: ROM & Resistance Profile */}
+        <View style={styles.dimensionRow}>
+          <View style={styles.dimensionHeader}>
+            <Text style={styles.dimensionLabel}>3. ROM & Resistance Profile</Text>
+            <Text style={styles.dimensionVal}>
+              {Math.round(scores.romAndResistanceProfile * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.round(scores.romAndResistanceProfile * 100)}%`,
+                  backgroundColor: colors.warning,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Dimension 4: Unilateral & Stability Demands */}
+        <View style={styles.dimensionRow}>
+          <View style={styles.dimensionHeader}>
+            <Text style={styles.dimensionLabel}>4. Unilateral & Stability Demands</Text>
+            <Text style={styles.dimensionVal}>
+              {Math.round(scores.unilateralAndStabilityDemand * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.round(scores.unilateralAndStabilityDemand * 100)}%`,
+                  backgroundColor: '#8B5CF6',
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Dimension 5: Prerequisites & Regressions */}
+        <View style={styles.dimensionRow}>
+          <View style={styles.dimensionHeader}>
+            <Text style={styles.dimensionLabel}>5. Prerequisite & Regression Linkage</Text>
+            <Text style={styles.dimensionVal}>
+              {Math.round(scores.hierarchicalRelationship * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.round(scores.hierarchicalRelationship * 100)}%`,
+                  backgroundColor: colors.success,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        <View style={styles.scientificFootnote}>
+          <Text style={styles.footnoteText}>
+            * Scientific Note: Muscle overlap alone does not guarantee movement equivalency. Unilateral loading introduces rotational torque and spinal stabiliser demands not captured by basic prime-mover lists.
           </Text>
         </View>
       </View>
 
-      {/* Shared Muscles & Role Changes */}
+      {/* Shared Target Muscles & Role Progression */}
       <View style={styles.card}>
         <Text style={styles.cardSectionTitle}>
           Shared Target Muscles ({comparison.sharedMuscles.length})
@@ -133,24 +314,38 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
         </Text>
 
         {comparison.sharedMuscles.map((sm) => {
-          const roleMatch = sm.roleA === sm.roleB;
           return (
             <View key={sm.muscleId} style={styles.sharedMuscleItem}>
-              <Text style={styles.sharedMuscleName}>{sm.muscleName}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sharedMuscleName}>{sm.muscleName}</Text>
+                {sm.evidenceA && (
+                  <Text style={styles.evidenceTagText}>
+                    Evidence: {sm.evidenceA.replace(/_/g, ' ')}
+                  </Text>
+                )}
+              </View>
               <View style={styles.rolesRow}>
                 <View
                   style={[
                     styles.rolePill,
-                    sm.roleA === 'primary' && styles.rolePillPrimary,
+                    sm.roleA === 'primary'
+                      ? styles.rolePillPrimary
+                      : sm.roleA === 'stabiliser'
+                      ? styles.rolePillStabiliser
+                      : styles.rolePillSecondary,
                   ]}
                 >
                   <Text style={styles.rolePillText}>A: {sm.roleA.toUpperCase()}</Text>
                 </View>
-                <Text style={{ color: colors.textMuted }}>→</Text>
+                <Text style={{ color: colors.textMuted, marginHorizontal: 4 }}>→</Text>
                 <View
                   style={[
                     styles.rolePill,
-                    sm.roleB === 'primary' && styles.rolePillPrimary,
+                    sm.roleB === 'primary'
+                      ? styles.rolePillPrimary
+                      : sm.roleB === 'stabiliser'
+                      ? styles.rolePillStabiliser
+                      : styles.rolePillSecondary,
                   ]}
                 >
                   <Text style={styles.rolePillText}>B: {sm.roleB.toUpperCase()}</Text>
@@ -161,9 +356,9 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
         })}
       </View>
 
-      {/* Distinct Muscles */}
+      {/* Distinct Muscles Recruitment */}
       <View style={styles.card}>
-        <Text style={styles.cardSectionTitle}>Unique / Distinct Muscle Recruitment</Text>
+        <Text style={styles.cardSectionTitle}>Distinct Muscle Recruitment</Text>
         <View style={styles.distinctCol}>
           <Text style={styles.distinctHeader}>Trained only by {exerciseA.name}:</Text>
           {comparison.distinctMusclesA.length === 0 ? (
@@ -191,7 +386,7 @@ export const ExerciseComparisonScreen: React.FC<ExerciseComparisonScreenProps> =
         </View>
       </View>
 
-      {/* Mechanical Differences */}
+      {/* Mechanical & Stability Differences */}
       <View style={styles.card}>
         <Text style={styles.cardSectionTitle}>Differences That Matter</Text>
         {comparison.mechanicalDifferences.map((diff, idx) => (
@@ -278,7 +473,7 @@ const styles = StyleSheet.create({
   },
   selectorExerciseName: {
     color: colors.textPrimary,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     marginTop: 2,
   },
@@ -288,23 +483,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   vsBadge: {
-    backgroundColor: colors.bgSecondary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
+    paddingHorizontal: spacing.xs,
   },
   vsText: {
     color: colors.textMuted,
-    fontSize: 10,
     fontWeight: '800',
+    fontSize: 11,
   },
   pickerDropdown: {
-    backgroundColor: colors.cardBg,
+    backgroundColor: colors.bgSecondary,
     borderRadius: borderRadius.md,
     padding: spacing.sm,
     marginBottom: spacing.md,
@@ -313,63 +500,86 @@ const styles = StyleSheet.create({
   },
   pickerTitle: {
     color: colors.accentPrimary,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    marginBottom: 6,
+    marginBottom: spacing.xs,
   },
   pickerItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: spacing.xs + 2,
     borderBottomWidth: 1,
     borderBottomColor: colors.cardBorder,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   pickerItemText: {
     color: colors.textPrimary,
     fontSize: 13,
+    fontWeight: '600',
   },
   pickerItemCategory: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 10,
   },
-  similarityCard: {
-    flexDirection: 'row',
+  feasibilityCard: {
     backgroundColor: colors.cardBg,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    alignItems: 'center',
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.cardBorder,
+  },
+  feasibilityBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.sm,
+  },
+  feasibilityBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  feasibilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   similarityScoreCircle: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.bgSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
     borderWidth: 2,
     borderColor: colors.accentPrimary,
-    marginRight: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   similarityScoreVal: {
-    color: colors.textPrimary,
+    color: colors.accentPrimary,
     fontSize: 18,
     fontWeight: '800',
   },
   similarityScoreSub: {
-    color: colors.accentPrimary,
+    color: colors.textMuted,
     fontSize: 8,
     fontWeight: '700',
   },
-  similarityInfo: {
+  feasibilityTextCol: {
     flex: 1,
   },
-  similarityRecommendation: {
+  feasibilityDesc: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  practicalRecommendation: {
     color: colors.textSecondary,
     fontSize: 12,
-    lineHeight: 17,
+    marginTop: 4,
+    lineHeight: 16,
   },
   card: {
     backgroundColor: colors.cardBg,
@@ -383,18 +593,58 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: 2,
   },
   cardSectionSub: {
     color: colors.textMuted,
     fontSize: 11,
+    marginTop: 2,
     marginBottom: spacing.sm,
+  },
+  dimensionRow: {
+    marginBottom: spacing.sm,
+  },
+  dimensionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  dimensionLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dimensionVal: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  progressBarTrack: {
+    height: 6,
+    backgroundColor: colors.bgSecondary,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  scientificFootnote: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+  },
+  footnoteText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontStyle: 'italic',
+    lineHeight: 14,
   },
   sharedMuscleItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: spacing.xs + 2,
     borderBottomWidth: 1,
     borderBottomColor: colors.cardBorder,
   },
@@ -402,28 +652,40 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
-    flex: 1,
+    textTransform: 'capitalize',
+  },
+  evidenceTagText: {
+    color: colors.textMuted,
+    fontSize: 9,
+    marginTop: 1,
   },
   rolesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
   rolePill: {
-    backgroundColor: colors.bgSecondary,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    borderRadius: 4,
+    backgroundColor: colors.bgSecondary,
   },
   rolePillPrimary: {
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+  },
+  rolePillSecondary: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  rolePillStabiliser: {
+    backgroundColor: 'rgba(139, 92, 246, 0.25)',
   },
   rolePillText: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '600',
+    color: colors.textPrimary,
+    fontSize: 9,
+    fontWeight: '700',
   },
-  distinctCol: {},
+  distinctCol: {
+    marginTop: 4,
+  },
   distinctHeader: {
     color: colors.accentPrimary,
     fontSize: 12,
@@ -432,7 +694,7 @@ const styles = StyleSheet.create({
   },
   distinctEmpty: {
     color: colors.textMuted,
-    fontSize: 12,
+    fontSize: 11,
     fontStyle: 'italic',
   },
   distinctText: {
@@ -443,18 +705,18 @@ const styles = StyleSheet.create({
   diffRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginTop: 6,
     gap: 6,
+    marginBottom: 4,
   },
   diffBullet: {
     color: colors.accentPrimary,
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 12,
+    lineHeight: 16,
   },
   diffText: {
     color: colors.textSecondary,
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 16,
     flex: 1,
   },
 });
