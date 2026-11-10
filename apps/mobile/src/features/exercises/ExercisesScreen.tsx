@@ -30,7 +30,7 @@ export const ExercisesScreen: React.FC<ExercisesScreenProps> = ({
   const [activeDetailExercise, setActiveDetailExercise] = useState<Exercise | null>(null);
   const [comparisonCandidate, setComparisonCandidate] = useState<Exercise | null>(null);
 
-  const categories = ['all', 'cardio', 'pull', 'core', 'push', 'legs', 'accessory'];
+  const categories = ['all', 'cardio', 'pull', 'core', 'push', 'legs', 'mobility', 'accessory'];
   const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
 
   const filteredExercises = canonicalExercises.filter((ex) => {
