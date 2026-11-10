@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Svg, { Path, G, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Path, G, Rect, Circle, Ellipse, Text as SvgText } from 'react-native-svg';
 import { colors, spacing, borderRadius, MuscleExposure, canonicalMuscles } from '../shared';
 
 interface AnatomyMapProps {
@@ -16,15 +16,27 @@ export const AnatomyMap: React.FC<AnatomyMapProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'front' | 'back'>('front');
 
+  if (!canonicalMuscles || canonicalMuscles.length === 0) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorTitle}>Anatomical Model Unavailable</Text>
+        <Text style={styles.errorSubtitle}>
+          Anatomy taxonomy data is missing or failed to initialize.
+        </Text>
+      </View>
+    );
+  }
+
   const getMuscleColor = (muscleId: string) => {
     const isSelected = selectedMuscleId === muscleId;
     if (isSelected) return colors.accentPrimary;
 
     const exp = exposures.find((e) => e.muscleId === muscleId);
-    if (!exp || exp.totalExposure === 0) return '#334155'; // Unassessed / low
+    if (!exp) return '#334155'; // Unassessed
     if (exp.status === 'in_target') return colors.coverageInTarget;
     if (exp.status === 'above_target') return colors.coverageAbove;
-    return colors.coverageBelow;
+    if (exp.status === 'below_target') return colors.coverageBelow;
+    return '#334155';
   };
 
   const selectedExp = selectedMuscleId
@@ -41,391 +53,625 @@ export const AnatomyMap: React.FC<AnatomyMapProps> = ({
         <TouchableOpacity
           style={[styles.toggleBtn, viewMode === 'front' && styles.toggleBtnActive]}
           onPress={() => setViewMode('front')}
+          accessibilityRole="button"
+          accessibilityLabel="Switch to Anterior Front Anatomy View"
         >
           <Text style={[styles.toggleText, viewMode === 'front' && styles.toggleTextActive]}>
-            Front Anatomy
+            Anterior (Front)
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleBtn, viewMode === 'back' && styles.toggleBtnActive]}
           onPress={() => setViewMode('back')}
+          accessibilityRole="button"
+          accessibilityLabel="Switch to Posterior Back Anatomy View"
         >
           <Text style={[styles.toggleText, viewMode === 'back' && styles.toggleTextActive]}>
-            Back Anatomy
+            Posterior (Back)
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* SVG Canvas */}
+      {/* SVG Anatomy Canvas */}
       <View style={styles.svgWrapper}>
-        <Svg width="260" height="340" viewBox="0 0 260 340">
+        <Svg width="280" height="420" viewBox="0 0 280 420">
           {viewMode === 'front' ? (
-            /* FRONT BODY */
-            <G>
-              {/* Head / Neck */}
-              <Rect x="115" y="10" width="30" height="35" rx="15" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
-              <TouchableOpacity onPress={() => onSelectMuscle('deep_cervical_flexors')}>
+            /* =========================================================================
+             * ANTERIOR (FRONT) BODY ANATOMY
+             * ========================================================================= */
+            <G id="anterior_body">
+              {/* Neutral Anatomical Body Silhouette Base */}
+              <G id="body_silhouette_front" opacity={0.65}>
+                {/* Cranium / Head */}
+                <Ellipse cx="140" cy="38" rx="22" ry="26" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
+                {/* Neck Base */}
+                <Path d="M 128 62 L 152 62 L 156 76 L 124 76 Z" fill="#1E293B" stroke="#334155" strokeWidth="1" />
+                {/* Clavicles / Torso Silhouette */}
+                <Path
+                  d="M 124 76 L 76 90 L 64 150 L 52 210 L 46 250 L 58 250 L 72 200 L 80 156 L 98 190 L 100 236 L 92 320 L 98 392 L 118 408 L 134 408 L 130 324 L 136 242 L 140 242 L 144 242 L 150 324 L 146 408 L 162 408 L 182 392 L 188 320 L 180 236 L 182 190 L 200 156 L 208 200 L 222 250 L 234 250 L 228 210 L 216 150 L 204 90 L 156 76 Z"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                />
+              </G>
+
+              {/* 1. Deep Cervical Flexors (Anterior Neck) */}
+              <G
+                id="muscle_deep_cervical_flexors"
+                onPress={() => onSelectMuscle('deep_cervical_flexors')}
+              >
                 <Rect
-                  x="120"
-                  y="48"
-                  width="20"
-                  height="12"
-                  rx="3"
+                  x="128"
+                  y="62"
+                  width="24"
+                  height="14"
+                  rx="4"
                   fill={getMuscleColor('deep_cervical_flexors')}
                   stroke={selectedMuscleId === 'deep_cervical_flexors' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'deep_cervical_flexors' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Shoulders - Anterior Deltoids */}
-              <TouchableOpacity onPress={() => onSelectMuscle('deltoid_anterior')}>
-                {/* Left Shoulder */}
+              {/* 2. Deltoid Anterior (Front Shoulders) */}
+              <G
+                id="muscle_deltoid_anterior"
+                onPress={() => onSelectMuscle('deltoid_anterior')}
+              >
+                {/* Left Anterior Deltoid */}
                 <Path
-                  d="M 85 62 C 72 65 65 80 68 95 C 75 95 85 85 92 78 Z"
+                  d="M 94 80 C 80 84 72 98 76 114 C 84 114 96 102 104 92 Z"
                   fill={getMuscleColor('deltoid_anterior')}
                   stroke={selectedMuscleId === 'deltoid_anterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'deltoid_anterior' ? 2 : 1}
                 />
-                {/* Right Shoulder */}
+                {/* Right Anterior Deltoid */}
                 <Path
-                  d="M 175 62 C 188 65 195 80 192 95 C 185 95 175 85 168 78 Z"
+                  d="M 186 80 C 200 84 208 98 204 114 C 196 114 184 102 176 92 Z"
                   fill={getMuscleColor('deltoid_anterior')}
                   stroke={selectedMuscleId === 'deltoid_anterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'deltoid_anterior' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Chest - Pectoralis Major */}
-              <TouchableOpacity onPress={() => onSelectMuscle('pectoralis_major_sternal')}>
-                {/* Left Chest */}
+              {/* 3. Deltoid Lateral (Side Shoulders) */}
+              <G
+                id="muscle_deltoid_lateral"
+                onPress={() => onSelectMuscle('deltoid_lateral')}
+              >
+                {/* Left Lateral Deltoid Cap */}
                 <Path
-                  d="M 94 66 C 115 65 125 70 127 96 C 110 102 96 98 88 84 Z"
+                  d="M 76 88 C 66 94 64 110 68 122 C 74 122 78 112 80 102 Z"
+                  fill={getMuscleColor('deltoid_lateral')}
+                  stroke={selectedMuscleId === 'deltoid_lateral' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'deltoid_lateral' ? 2 : 1}
+                />
+                {/* Right Lateral Deltoid Cap */}
+                <Path
+                  d="M 204 88 C 214 94 216 110 212 122 C 206 122 202 112 200 102 Z"
+                  fill={getMuscleColor('deltoid_lateral')}
+                  stroke={selectedMuscleId === 'deltoid_lateral' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'deltoid_lateral' ? 2 : 1}
+                />
+              </G>
+
+              {/* 4. Pectoralis Major - Clavicular Head (Upper Chest) */}
+              <G
+                id="muscle_pectoralis_major_clavicular"
+                onPress={() => onSelectMuscle('pectoralis_major_clavicular')}
+              >
+                <Path
+                  d="M 106 82 L 138 82 L 138 94 L 98 94 Z"
+                  fill={getMuscleColor('pectoralis_major_clavicular')}
+                  stroke={selectedMuscleId === 'pectoralis_major_clavicular' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'pectoralis_major_clavicular' ? 2 : 1}
+                />
+                <Path
+                  d="M 142 82 L 174 82 L 182 94 L 142 94 Z"
+                  fill={getMuscleColor('pectoralis_major_clavicular')}
+                  stroke={selectedMuscleId === 'pectoralis_major_clavicular' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'pectoralis_major_clavicular' ? 2 : 1}
+                />
+              </G>
+
+              {/* 5. Pectoralis Major - Sternal Head (Mid/Lower Chest) */}
+              <G
+                id="muscle_pectoralis_major_sternal"
+                onPress={() => onSelectMuscle('pectoralis_major_sternal')}
+              >
+                {/* Left Pectoral Sternal */}
+                <Path
+                  d="M 98 96 C 122 96 136 100 138 126 C 118 132 102 126 92 112 Z"
                   fill={getMuscleColor('pectoralis_major_sternal')}
                   stroke={selectedMuscleId === 'pectoralis_major_sternal' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'pectoralis_major_sternal' ? 2 : 1}
                 />
-                {/* Right Chest */}
+                {/* Right Pectoral Sternal */}
                 <Path
-                  d="M 166 66 C 145 65 135 70 133 96 C 150 102 164 98 172 84 Z"
+                  d="M 182 96 C 158 96 144 100 142 126 C 162 132 178 126 188 112 Z"
                   fill={getMuscleColor('pectoralis_major_sternal')}
                   stroke={selectedMuscleId === 'pectoralis_major_sternal' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'pectoralis_major_sternal' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Arms - Biceps Brachii */}
-              <TouchableOpacity onPress={() => onSelectMuscle('biceps_brachii')}>
+              {/* 6. Biceps Brachii (Anterior Upper Arm) */}
+              <G
+                id="muscle_biceps_brachii"
+                onPress={() => onSelectMuscle('biceps_brachii')}
+              >
+                {/* Left Biceps */}
                 <Rect
-                  x="56"
-                  y="98"
+                  x="66"
+                  y="126"
                   width="18"
-                  height="36"
-                  rx="7"
+                  height="40"
+                  rx="8"
                   fill={getMuscleColor('biceps_brachii')}
                   stroke={selectedMuscleId === 'biceps_brachii' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'biceps_brachii' ? 2 : 1}
                 />
-                <Rect
-                  x="186"
-                  y="98"
-                  width="18"
-                  height="36"
-                  rx="7"
-                  fill={getMuscleColor('biceps_brachii')}
-                  stroke={selectedMuscleId === 'biceps_brachii' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
-                />
-              </TouchableOpacity>
-
-              {/* Forearms - Flexors */}
-              <TouchableOpacity onPress={() => onSelectMuscle('forearm_flexors')}>
-                <Rect
-                  x="48"
-                  y="138"
-                  width="16"
-                  height="42"
-                  rx="6"
-                  fill={getMuscleColor('forearm_flexors')}
-                  stroke={selectedMuscleId === 'forearm_flexors' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
-                />
+                {/* Right Biceps */}
                 <Rect
                   x="196"
-                  y="138"
+                  y="126"
+                  width="18"
+                  height="40"
+                  rx="8"
+                  fill={getMuscleColor('biceps_brachii')}
+                  stroke={selectedMuscleId === 'biceps_brachii' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'biceps_brachii' ? 2 : 1}
+                />
+              </G>
+
+              {/* 7. Forearm Flexors (Anterior Forearms) */}
+              <G
+                id="muscle_forearm_flexors"
+                onPress={() => onSelectMuscle('forearm_flexors')}
+              >
+                {/* Left Forearm Flexors */}
+                <Rect
+                  x="54"
+                  y="172"
                   width="16"
-                  height="42"
+                  height="46"
                   rx="6"
                   fill={getMuscleColor('forearm_flexors')}
                   stroke={selectedMuscleId === 'forearm_flexors' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'forearm_flexors' ? 2 : 1}
                 />
-              </TouchableOpacity>
+                {/* Right Forearm Flexors */}
+                <Rect
+                  x="210"
+                  y="172"
+                  width="16"
+                  height="46"
+                  rx="6"
+                  fill={getMuscleColor('forearm_flexors')}
+                  stroke={selectedMuscleId === 'forearm_flexors' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'forearm_flexors' ? 2 : 1}
+                />
+              </G>
 
-              {/* Core - Rectus Abdominis */}
-              <TouchableOpacity onPress={() => onSelectMuscle('rectus_abdominis')}>
-                <G>
-                  <Rect
-                    x="114"
-                    y="102"
-                    width="14"
-                    height="18"
-                    rx="3"
-                    fill={getMuscleColor('rectus_abdominis')}
-                    stroke="#475569"
-                    strokeWidth="1"
-                  />
-                  <Rect
-                    x="132"
-                    y="102"
-                    width="14"
-                    height="18"
-                    rx="3"
-                    fill={getMuscleColor('rectus_abdominis')}
-                    stroke="#475569"
-                    strokeWidth="1"
-                  />
-                  <Rect
-                    x="114"
-                    y="124"
-                    width="14"
-                    height="18"
-                    rx="3"
-                    fill={getMuscleColor('rectus_abdominis')}
-                    stroke="#475569"
-                    strokeWidth="1"
-                  />
-                  <Rect
-                    x="132"
-                    y="124"
-                    width="14"
-                    height="18"
-                    rx="3"
-                    fill={getMuscleColor('rectus_abdominis')}
-                    stroke="#475569"
-                    strokeWidth="1"
-                  />
-                  <Rect
-                    x="115"
-                    y="146"
-                    width="30"
-                    height="18"
-                    rx="3"
-                    fill={getMuscleColor('rectus_abdominis')}
-                    stroke="#475569"
-                    strokeWidth="1"
-                  />
-                </G>
-              </TouchableOpacity>
-
-              {/* Core - Obliques */}
-              <TouchableOpacity onPress={() => onSelectMuscle('obliques')}>
+              {/* 8. Serratus Anterior (Lateral Ribcage) */}
+              <G
+                id="muscle_serratus_anterior"
+                onPress={() => onSelectMuscle('serratus_anterior')}
+              >
+                {/* Left Serratus Digitations */}
                 <Path
-                  d="M 94 106 C 108 106 108 152 102 158 C 92 144 90 120 94 106 Z"
+                  d="M 94 130 L 106 134 L 104 156 L 90 148 Z"
+                  fill={getMuscleColor('serratus_anterior')}
+                  stroke={selectedMuscleId === 'serratus_anterior' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'serratus_anterior' ? 2 : 1}
+                />
+                {/* Right Serratus Digitations */}
+                <Path
+                  d="M 186 130 L 174 134 L 176 156 L 190 148 Z"
+                  fill={getMuscleColor('serratus_anterior')}
+                  stroke={selectedMuscleId === 'serratus_anterior' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'serratus_anterior' ? 2 : 1}
+                />
+              </G>
+
+              {/* 9. Rectus Abdominis (Anterior Core) */}
+              <G
+                id="muscle_rectus_abdominis"
+                onPress={() => onSelectMuscle('rectus_abdominis')}
+              >
+                {/* Top Pack */}
+                <Rect x="123" y="132" width="15" height="16" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+                <Rect x="142" y="132" width="15" height="16" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+                {/* Mid Pack */}
+                <Rect x="123" y="152" width="15" height="16" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+                <Rect x="142" y="152" width="15" height="16" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+                {/* Lower Pack */}
+                <Rect x="123" y="172" width="15" height="20" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+                <Rect x="142" y="172" width="15" height="20" rx="3" fill={getMuscleColor('rectus_abdominis')} stroke="#334155" strokeWidth="1" />
+              </G>
+
+              {/* 10. Obliques (Anterolateral Core) */}
+              <G
+                id="muscle_obliques"
+                onPress={() => onSelectMuscle('obliques')}
+              >
+                {/* Left Obliques */}
+                <Path
+                  d="M 104 140 C 118 140 120 184 114 192 C 102 182 100 156 104 140 Z"
                   fill={getMuscleColor('obliques')}
                   stroke={selectedMuscleId === 'obliques' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'obliques' ? 2 : 1}
                 />
+                {/* Right Obliques */}
                 <Path
-                  d="M 166 106 C 152 106 152 152 158 158 C 168 144 170 120 166 106 Z"
+                  d="M 176 140 C 162 140 160 184 166 192 C 178 182 180 156 176 140 Z"
                   fill={getMuscleColor('obliques')}
                   stroke={selectedMuscleId === 'obliques' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'obliques' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Legs - Quadriceps */}
-              <TouchableOpacity onPress={() => onSelectMuscle('quadriceps')}>
+              {/* 11. Quadriceps (Anterior Thighs) */}
+              <G
+                id="muscle_quadriceps"
+                onPress={() => onSelectMuscle('quadriceps')}
+              >
                 {/* Left Quad */}
                 <Path
-                  d="M 98 172 C 122 172 124 238 116 248 C 104 248 92 235 90 190 Z"
+                  d="M 106 206 C 134 206 136 280 126 294 C 112 294 98 280 96 226 Z"
                   fill={getMuscleColor('quadriceps')}
                   stroke={selectedMuscleId === 'quadriceps' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'quadriceps' ? 2 : 1}
                 />
                 {/* Right Quad */}
                 <Path
-                  d="M 162 172 C 138 172 136 238 144 248 C 156 248 168 235 170 190 Z"
+                  d="M 174 206 C 146 206 144 280 154 294 C 168 294 182 280 184 226 Z"
                   fill={getMuscleColor('quadriceps')}
                   stroke={selectedMuscleId === 'quadriceps' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'quadriceps' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Shins - Tibialis Anterior */}
-              <TouchableOpacity onPress={() => onSelectMuscle('tibialis_anterior')}>
+              {/* 12. Tibialis Anterior (Anterior Shins) */}
+              <G
+                id="muscle_tibialis_anterior"
+                onPress={() => onSelectMuscle('tibialis_anterior')}
+              >
+                {/* Left Shin */}
                 <Rect
-                  x="96"
-                  y="256"
-                  width="14"
-                  height="54"
-                  rx="6"
+                  x="104"
+                  y="306"
+                  width="16"
+                  height="66"
+                  rx="7"
                   fill={getMuscleColor('tibialis_anterior')}
                   stroke={selectedMuscleId === 'tibialis_anterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'tibialis_anterior' ? 2 : 1}
                 />
+                {/* Right Shin */}
                 <Rect
-                  x="150"
-                  y="256"
-                  width="14"
-                  height="54"
-                  rx="6"
+                  x="160"
+                  y="306"
+                  width="16"
+                  height="66"
+                  rx="7"
                   fill={getMuscleColor('tibialis_anterior')}
                   stroke={selectedMuscleId === 'tibialis_anterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'tibialis_anterior' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
             </G>
           ) : (
-            /* BACK BODY */
-            <G>
-              {/* Head / Neck */}
-              <Rect x="115" y="10" width="30" height="35" rx="15" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
-
-              {/* Upper Trapezius */}
-              <TouchableOpacity onPress={() => onSelectMuscle('trapezius_upper')}>
+            /* =========================================================================
+             * POSTERIOR (BACK) BODY ANATOMY
+             * ========================================================================= */
+            <G id="posterior_body">
+              {/* Neutral Anatomical Body Silhouette Base */}
+              <G id="body_silhouette_back" opacity={0.65}>
+                {/* Head (Posterior view) */}
+                <Ellipse cx="140" cy="38" rx="22" ry="26" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
+                {/* Posterior Silhouette Contour */}
                 <Path
-                  d="M 115 48 L 145 48 L 168 64 L 92 64 Z"
+                  d="M 124 76 L 76 90 L 64 150 L 52 210 L 46 250 L 58 250 L 72 200 L 80 156 L 98 190 L 98 240 L 92 320 L 98 392 L 118 408 L 134 408 L 130 324 L 136 242 L 140 242 L 144 242 L 150 324 L 146 408 L 162 408 L 182 392 L 188 320 L 182 240 L 182 190 L 200 156 L 208 200 L 222 250 L 234 250 L 228 210 L 216 150 L 204 90 L 156 76 Z"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                />
+              </G>
+
+              {/* 1. Trapezius Upper (Neck & Shoulder Girdle) */}
+              <G
+                id="muscle_trapezius_upper"
+                onPress={() => onSelectMuscle('trapezius_upper')}
+              >
+                <Path
+                  d="M 124 60 L 156 60 L 184 80 L 96 80 Z"
                   fill={getMuscleColor('trapezius_upper')}
                   stroke={selectedMuscleId === 'trapezius_upper' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'trapezius_upper' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Mid / Lower Trapezius & Rhomboids */}
-              <TouchableOpacity onPress={() => onSelectMuscle('trapezius_mid_lower')}>
+              {/* 2. Trapezius Mid/Lower & Rhomboids (Interscapular Diamond) */}
+              <G
+                id="muscle_trapezius_mid_lower"
+                onPress={() => onSelectMuscle('trapezius_mid_lower')}
+              >
                 <Path
-                  d="M 94 66 L 166 66 L 142 118 L 118 118 Z"
+                  d="M 104 82 L 176 82 L 150 144 L 130 144 Z"
                   fill={getMuscleColor('trapezius_mid_lower')}
                   stroke={selectedMuscleId === 'trapezius_mid_lower' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'trapezius_mid_lower' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Posterior Deltoids */}
-              <TouchableOpacity onPress={() => onSelectMuscle('deltoid_posterior')}>
+              {/* 3. Posterior Deltoids (Rear Shoulders) */}
+              <G
+                id="muscle_deltoid_posterior"
+                onPress={() => onSelectMuscle('deltoid_posterior')}
+              >
+                {/* Left Posterior Deltoid */}
                 <Path
-                  d="M 85 64 C 70 66 64 82 66 94 C 74 94 84 86 92 78 Z"
+                  d="M 94 80 C 78 84 70 100 74 114 C 82 114 94 104 102 94 Z"
                   fill={getMuscleColor('deltoid_posterior')}
                   stroke={selectedMuscleId === 'deltoid_posterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'deltoid_posterior' ? 2 : 1}
                 />
+                {/* Right Posterior Deltoid */}
                 <Path
-                  d="M 175 64 C 190 66 196 82 194 94 C 186 94 176 86 168 78 Z"
+                  d="M 186 80 C 202 84 210 100 206 114 C 198 114 186 104 178 94 Z"
                   fill={getMuscleColor('deltoid_posterior')}
                   stroke={selectedMuscleId === 'deltoid_posterior' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'deltoid_posterior' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Latissimus Dorsi */}
-              <TouchableOpacity onPress={() => onSelectMuscle('latissimus_dorsi')}>
+              {/* 4. Rotator Cuff (Infraspinatus & Teres Minor) */}
+              <G
+                id="muscle_rotator_cuff"
+                onPress={() => onSelectMuscle('rotator_cuff')}
+              >
                 <Path
-                  d="M 88 88 C 104 88 114 116 116 142 C 96 140 88 116 88 88 Z"
+                  d="M 88 104 L 106 104 L 102 124 L 84 120 Z"
+                  fill={getMuscleColor('rotator_cuff')}
+                  stroke={selectedMuscleId === 'rotator_cuff' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'rotator_cuff' ? 2 : 1}
+                />
+                <Path
+                  d="M 192 104 L 174 104 L 178 124 L 196 120 Z"
+                  fill={getMuscleColor('rotator_cuff')}
+                  stroke={selectedMuscleId === 'rotator_cuff' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'rotator_cuff' ? 2 : 1}
+                />
+              </G>
+
+              {/* 5. Latissimus Dorsi (Broad Mid/Lower Back) */}
+              <G
+                id="muscle_latissimus_dorsi"
+                onPress={() => onSelectMuscle('latissimus_dorsi')}
+              >
+                {/* Left Lat Wing */}
+                <Path
+                  d="M 94 106 C 114 106 126 136 128 174 C 104 170 94 140 94 106 Z"
                   fill={getMuscleColor('latissimus_dorsi')}
                   stroke={selectedMuscleId === 'latissimus_dorsi' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'latissimus_dorsi' ? 2 : 1}
                 />
+                {/* Right Lat Wing */}
                 <Path
-                  d="M 172 88 C 156 88 146 116 144 142 C 164 140 172 116 172 88 Z"
+                  d="M 186 106 C 166 106 154 136 152 174 C 176 170 186 140 186 106 Z"
                   fill={getMuscleColor('latissimus_dorsi')}
                   stroke={selectedMuscleId === 'latissimus_dorsi' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'latissimus_dorsi' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Arms - Triceps Brachii */}
-              <TouchableOpacity onPress={() => onSelectMuscle('triceps_brachii')}>
+              {/* 6. Erector Spinae (Lower/Mid Spinal Column) */}
+              <G
+                id="muscle_erector_spinae"
+                onPress={() => onSelectMuscle('erector_spinae')}
+              >
                 <Rect
-                  x="56"
-                  y="96"
+                  x="132"
+                  y="140"
+                  width="16"
+                  height="54"
+                  rx="4"
+                  fill={getMuscleColor('erector_spinae')}
+                  stroke={selectedMuscleId === 'erector_spinae' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'erector_spinae' ? 2 : 1}
+                />
+              </G>
+
+              {/* 7. Triceps Brachii (Posterior Upper Arms) */}
+              <G
+                id="muscle_triceps_brachii"
+                onPress={() => onSelectMuscle('triceps_brachii')}
+              >
+                {/* Left Triceps */}
+                <Rect
+                  x="64"
+                  y="124"
                   width="18"
-                  height="38"
-                  rx="7"
+                  height="44"
+                  rx="8"
                   fill={getMuscleColor('triceps_brachii')}
                   stroke={selectedMuscleId === 'triceps_brachii' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'triceps_brachii' ? 2 : 1}
                 />
+                {/* Right Triceps */}
                 <Rect
-                  x="186"
-                  y="96"
+                  x="198"
+                  y="124"
                   width="18"
-                  height="38"
-                  rx="7"
+                  height="44"
+                  rx="8"
                   fill={getMuscleColor('triceps_brachii')}
                   stroke={selectedMuscleId === 'triceps_brachii' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'triceps_brachii' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Gluteus Maximus */}
-              <TouchableOpacity onPress={() => onSelectMuscle('gluteus_maximus')}>
+              {/* 8. Forearm Extensors (Posterior Forearms) */}
+              <G
+                id="muscle_forearm_extensors"
+                onPress={() => onSelectMuscle('forearm_extensors')}
+              >
+                {/* Left Forearm Extensors */}
+                <Rect
+                  x="52"
+                  y="172"
+                  width="16"
+                  height="46"
+                  rx="6"
+                  fill={getMuscleColor('forearm_extensors')}
+                  stroke={selectedMuscleId === 'forearm_extensors' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'forearm_extensors' ? 2 : 1}
+                />
+                {/* Right Forearm Extensors */}
+                <Rect
+                  x="212"
+                  y="172"
+                  width="16"
+                  height="46"
+                  rx="6"
+                  fill={getMuscleColor('forearm_extensors')}
+                  stroke={selectedMuscleId === 'forearm_extensors' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'forearm_extensors' ? 2 : 1}
+                />
+              </G>
+
+              {/* 9. Gluteus Medius / Minimus (Outer Upper Pelvis) */}
+              <G
+                id="muscle_gluteus_medius_minimus"
+                onPress={() => onSelectMuscle('gluteus_medius_minimus')}
+              >
                 <Path
-                  d="M 96 160 C 126 158 128 200 114 206 C 96 206 92 184 96 160 Z"
+                  d="M 94 186 C 114 186 116 208 106 216 C 92 216 88 198 94 186 Z"
+                  fill={getMuscleColor('gluteus_medius_minimus')}
+                  stroke={selectedMuscleId === 'gluteus_medius_minimus' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'gluteus_medius_minimus' ? 2 : 1}
+                />
+                <Path
+                  d="M 186 186 C 166 186 164 208 174 216 C 188 216 192 198 186 186 Z"
+                  fill={getMuscleColor('gluteus_medius_minimus')}
+                  stroke={selectedMuscleId === 'gluteus_medius_minimus' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'gluteus_medius_minimus' ? 2 : 1}
+                />
+              </G>
+
+              {/* 10. Gluteus Maximus (Buttocks) */}
+              <G
+                id="muscle_gluteus_maximus"
+                onPress={() => onSelectMuscle('gluteus_maximus')}
+              >
+                {/* Left Glute */}
+                <Path
+                  d="M 104 196 C 138 196 138 244 124 250 C 102 250 98 226 104 196 Z"
                   fill={getMuscleColor('gluteus_maximus')}
                   stroke={selectedMuscleId === 'gluteus_maximus' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'gluteus_maximus' ? 2 : 1}
                 />
+                {/* Right Glute */}
                 <Path
-                  d="M 164 160 C 134 158 132 200 146 206 C 164 206 168 184 164 160 Z"
+                  d="M 176 196 C 142 196 142 244 156 250 C 178 250 182 226 176 196 Z"
                   fill={getMuscleColor('gluteus_maximus')}
                   stroke={selectedMuscleId === 'gluteus_maximus' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'gluteus_maximus' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Thighs - Hamstrings */}
-              <TouchableOpacity onPress={() => onSelectMuscle('hamstrings')}>
+              {/* 11. Hamstrings (Posterior Thighs) */}
+              <G
+                id="muscle_hamstrings"
+                onPress={() => onSelectMuscle('hamstrings')}
+              >
+                {/* Left Hamstring */}
                 <Rect
-                  x="96"
-                  y="210"
-                  width="26"
-                  height="44"
-                  rx="6"
+                  x="102"
+                  y="254"
+                  width="28"
+                  height="52"
+                  rx="7"
                   fill={getMuscleColor('hamstrings')}
                   stroke={selectedMuscleId === 'hamstrings' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'hamstrings' ? 2 : 1}
                 />
+                {/* Right Hamstring */}
                 <Rect
-                  x="138"
-                  y="210"
-                  width="26"
-                  height="44"
-                  rx="6"
+                  x="150"
+                  y="254"
+                  width="28"
+                  height="52"
+                  rx="7"
                   fill={getMuscleColor('hamstrings')}
                   stroke={selectedMuscleId === 'hamstrings' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'hamstrings' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
 
-              {/* Calves - Gastrocnemius */}
-              <TouchableOpacity onPress={() => onSelectMuscle('gastrocnemius')}>
+              {/* 12. Gastrocnemius (Posterior Upper Calves) */}
+              <G
+                id="muscle_gastrocnemius"
+                onPress={() => onSelectMuscle('gastrocnemius')}
+              >
+                {/* Left Calf */}
                 <Rect
-                  x="96"
-                  y="260"
-                  width="24"
-                  height="48"
-                  rx="7"
+                  x="104"
+                  y="314"
+                  width="26"
+                  height="46"
+                  rx="8"
                   fill={getMuscleColor('gastrocnemius')}
                   stroke={selectedMuscleId === 'gastrocnemius' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'gastrocnemius' ? 2 : 1}
                 />
+                {/* Right Calf */}
                 <Rect
-                  x="140"
-                  y="260"
-                  width="24"
-                  height="48"
-                  rx="7"
+                  x="150"
+                  y="314"
+                  width="26"
+                  height="46"
+                  rx="8"
                   fill={getMuscleColor('gastrocnemius')}
                   stroke={selectedMuscleId === 'gastrocnemius' ? colors.textPrimary : '#475569'}
-                  strokeWidth="1.5"
+                  strokeWidth={selectedMuscleId === 'gastrocnemius' ? 2 : 1}
                 />
-              </TouchableOpacity>
+              </G>
+
+              {/* 13. Soleus (Posterior Lower Calves) */}
+              <G
+                id="muscle_soleus"
+                onPress={() => onSelectMuscle('soleus')}
+              >
+                {/* Left Soleus */}
+                <Rect
+                  x="110"
+                  y="362"
+                  width="18"
+                  height="26"
+                  rx="5"
+                  fill={getMuscleColor('soleus')}
+                  stroke={selectedMuscleId === 'soleus' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'soleus' ? 2 : 1}
+                />
+                {/* Right Soleus */}
+                <Rect
+                  x="152"
+                  y="362"
+                  width="18"
+                  height="26"
+                  rx="5"
+                  fill={getMuscleColor('soleus')}
+                  stroke={selectedMuscleId === 'soleus' ? colors.textPrimary : '#475569'}
+                  strokeWidth={selectedMuscleId === 'soleus' ? 2 : 1}
+                />
+              </G>
             </G>
           )}
         </Svg>
       </View>
 
-      {/* Quick Selected Muscle Card */}
+      {/* Selected Muscle Card Banner */}
       {selectedMuscleObj && (
         <View style={styles.selectedMuscleBar}>
           <View style={{ flex: 1 }}>
@@ -440,29 +686,31 @@ export const AnatomyMap: React.FC<AnatomyMapProps> = ({
                 ? 'IN TARGET'
                 : selectedExp?.status === 'above_target'
                 ? 'ABOVE'
-                : 'DEFICIT'}
+                : selectedExp?.status === 'below_target'
+                ? 'DEFICIT'
+                : 'UNASSESSED'}
             </Text>
           </View>
         </View>
       )}
 
-      {/* Legend */}
+      {/* Exposure Legend */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.coverageBelow }]} />
-          <Text style={styles.legendLabel}>Below Target</Text>
+          <View style={[styles.legendDot, { backgroundColor: colors.coverageInTarget }]} />
+          <Text style={styles.legendText}>In Target</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.coverageInTarget }]} />
-          <Text style={styles.legendLabel}>In Target</Text>
+          <View style={[styles.legendDot, { backgroundColor: colors.coverageBelow }]} />
+          <Text style={styles.legendText}>Deficit Gap</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors.coverageAbove }]} />
-          <Text style={styles.legendLabel}>Above</Text>
+          <Text style={styles.legendText}>Above Target</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#334155' }]} />
-          <Text style={styles.legendLabel}>Unassessed</Text>
+          <Text style={styles.legendText}>Unassessed</Text>
         </View>
       </View>
     </View>
@@ -474,68 +722,53 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBg,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.cardBorder,
+    alignItems: 'center',
+    marginVertical: spacing.sm,
   },
   toggleRow: {
     flexDirection: 'row',
     backgroundColor: colors.bgSecondary,
     borderRadius: borderRadius.md,
     padding: 3,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   toggleBtn: {
+    paddingHorizontal: spacing.md,
     paddingVertical: 6,
-    paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.sm,
   },
   toggleBtnActive: {
     backgroundColor: colors.accentPrimary,
   },
   toggleText: {
-    color: colors.textSecondary,
-    fontSize: 13,
+    color: colors.textMuted,
+    fontSize: 12,
     fontWeight: '600',
   },
   toggleTextActive: {
-    color: colors.textInverse,
+    color: colors.bgPrimary,
+    fontWeight: '700',
   },
   svgWrapper: {
-    alignItems: 'center',
+    width: 280,
+    height: 420,
     justifyContent: 'center',
-  },
-  legendRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.cardBorder,
-  },
-  legendItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '500',
+    backgroundColor: '#090D16',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    overflow: 'hidden',
   },
   selectedMuscleBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: colors.bgSecondary,
+    padding: spacing.sm,
     borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
     width: '100%',
     marginTop: spacing.sm,
     borderWidth: 1,
@@ -543,7 +776,7 @@ const styles = StyleSheet.create({
   },
   selectedMuscleName: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
   },
   selectedMuscleMeta: {
@@ -552,14 +785,58 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
     borderRadius: borderRadius.sm,
   },
   statusPillText: {
-    color: colors.textInverse,
+    color: colors.textPrimary,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: spacing.md,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: colors.cardBg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    alignItems: 'center',
+    marginVertical: spacing.md,
+  },
+  errorTitle: {
+    color: colors.danger,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  errorSubtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
