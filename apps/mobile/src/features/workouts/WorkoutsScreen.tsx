@@ -171,7 +171,7 @@ export const WorkoutsScreen: React.FC<WorkoutsScreenProps> = ({
                   <View style={styles.historySetsPreview}>
                     {s.sets.map((set, i) => (
                       <Text key={set.id || i} style={styles.historySetItem}>
-                        • {getExerciseName(set.exerciseId)}: {set.reps ? `${set.reps} reps` : `${set.holdSeconds}s`} (RIR: {set.rir ?? '-'})
+                        • {getExerciseName(set.exerciseId)}: {set.reps != null ? `${set.reps} reps` : set.holdSeconds != null ? `${set.holdSeconds}s` : set.distanceMeters != null ? `${set.distanceMeters}m` : set.flightsClimbed != null ? `${set.flightsClimbed} fl` : ''} (RIR: {set.rir ?? '-'})
                       </Text>
                     ))}
                   </View>
