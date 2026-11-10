@@ -198,6 +198,11 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                 <View style={{ flex: 1 }}>
                   <Text style={styles.categorySub}>{ex.category.toUpperCase()}</Text>
                   <Text style={styles.exerciseName}>{ex.name}</Text>
+                  {ex.instructions ? (
+                    <Text style={styles.exerciseInstructions} numberOfLines={2}>
+                      💡 {ex.instructions}
+                    </Text>
+                  ) : null}
                 </View>
                 <Text style={styles.setsCountBadge}>{completedSets.length} Sets</Text>
               </View>
@@ -236,12 +241,12 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                           ...prev,
                           [ex.id]: {
                             ...input,
-                            value: Math.max(1, input.value - 1),
+                            value: Math.max(1, input.value - (ex.defaultUnit === 'seconds' ? 5 : 1)),
                           },
                         }))
                       }
                     >
-                      <Text style={styles.counterBtnText}>-</Text>
+                      <Text style={styles.counterBtnText}>{ex.defaultUnit === 'seconds' ? '-5' : '-'}</Text>
                     </TouchableOpacity>
                     <Text style={styles.counterVal}>{input.value}</Text>
                     <TouchableOpacity
@@ -251,13 +256,29 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                           ...prev,
                           [ex.id]: {
                             ...input,
-                            value: input.value + 1,
+                            value: input.value + (ex.defaultUnit === 'seconds' ? 5 : 1),
                           },
                         }))
                       }
                     >
-                      <Text style={styles.counterBtnText}>+</Text>
+                      <Text style={styles.counterBtnText}>{ex.defaultUnit === 'seconds' ? '+5' : '+'}</Text>
                     </TouchableOpacity>
+                    {ex.defaultUnit === 'seconds' && (
+                      <TouchableOpacity
+                        style={styles.counterBtnQuick}
+                        onPress={() =>
+                          setExerciseInputs((prev) => ({
+                            ...prev,
+                            [ex.id]: {
+                              ...input,
+                              value: input.value + 15,
+                            },
+                          }))
+                        }
+                      >
+                        <Text style={styles.counterBtnQuickText}>+15s</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
 
@@ -470,6 +491,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  exerciseInstructions: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+    fontStyle: 'italic',
+  },
   setsCountBadge: {
     color: colors.accentPrimary,
     fontSize: 12,
@@ -544,7 +571,22 @@ const styles = StyleSheet.create({
   },
   counterBtnText: {
     color: colors.textPrimary,
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  counterBtnQuick: {
+    paddingHorizontal: 6,
+    height: 28,
+    borderRadius: borderRadius.sm,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  counterBtnQuickText: {
+    color: colors.accentPrimary,
+    fontSize: 10,
     fontWeight: '700',
   },
   counterVal: {
