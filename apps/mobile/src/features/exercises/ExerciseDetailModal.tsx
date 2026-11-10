@@ -48,6 +48,27 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
     }
   };
 
+  const getEvidenceCategoryLabel = (category?: string) => {
+    if (!category) return 'ANATOMICAL INFERENCE';
+    switch (category) {
+      case 'emg_excitation_evidence':
+        return 'DIRECT SURFACE EMG';
+      case 'biomechanical_evidence':
+        return 'BIOMECHANICAL MOMENT ARM';
+      case 'intervention_study':
+        return 'LONGITUDINAL HYPERTROPHY TRIAL';
+      case 'expert_consensus':
+        return 'EXPERT CONSENSUS';
+      default:
+        return category.replace(/_/g, ' ').toUpperCase();
+    }
+  };
+
+  // Aggregate represented evidence types
+  const evidenceCategories = Array.from(
+    new Set(exercise.muscleMappings.map((m) => m.evidenceCategory).filter(Boolean))
+  );
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -60,7 +81,7 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
               </Text>
               <Text style={styles.title}>{exercise.name}</Text>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close exercise detail">
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -98,21 +119,38 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             {/* Safety & Prerequisite Notes */}
             {exercise.safetyCautions && (
               <View style={styles.cautionBox}>
-                <Text style={styles.cautionTitle}>⚠️ Safety Caution</Text>
+                <Text style={styles.cautionTitle}>⚠️ Safety Caution & Form Guardrail</Text>
                 <Text style={styles.cautionText}>{exercise.safetyCautions}</Text>
               </View>
             )}
 
             {/* Muscle Recruitment Roles */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Anatomical Muscle Roles</Text>
+              <Text style={styles.sectionTitle}>Anatomical Muscle Roles & Evidence</Text>
               {exercise.muscleMappings.map((mapping) => {
                 const isPrimary = mapping.role === 'primary';
+                const confidenceColor =
+                  mapping.confidence === 'high'
+                    ? colors.success
+                    : mapping.confidence === 'moderate'
+                    ? colors.info
+                    : colors.warning;
+
                 return (
                   <View key={mapping.muscleId} style={styles.muscleRow}>
                     <View style={styles.muscleLeft}>
-                      <Text style={styles.muscleName}>{getMuscleName(mapping.muscleId)}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.muscleName}>{getMuscleName(mapping.muscleId)}</Text>
+                        <View style={[styles.evidenceBadgeSmall, { borderColor: confidenceColor }]}>
+                          <Text style={[styles.evidenceBadgeSmallText, { color: confidenceColor }]}>
+                            {mapping.confidence?.toUpperCase() || 'MODERATE'}
+                          </Text>
+                        </View>
+                      </View>
                       <Text style={styles.jointAction}>Action: {mapping.jointAction}</Text>
+                      <Text style={styles.evidenceSourceTag}>
+                        Evidence: {getEvidenceCategoryLabel(mapping.evidenceCategory)}
+                      </Text>
                       {mapping.notes ? (
                         <Text style={styles.mappingNotes}>• {mapping.notes}</Text>
                       ) : null}
@@ -146,12 +184,17 @@ export const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
 
             {/* Evidence & Scientific Provenance */}
             <View style={styles.evidenceBox}>
-              <Text style={styles.evidenceTitle}>Scientific Provenance</Text>
+              <Text style={styles.evidenceTitle}>Scientific Provenance & Model Limitations</Text>
               <Text style={styles.evidenceText}>
-                Confidence: <Text style={{ color: colors.success, fontWeight: '700' }}>MODERATE / HIGH</Text>
+                Supported Evidence Categories:{' '}
+                <Text style={{ color: colors.accentPrimary, fontWeight: '700' }}>
+                  {evidenceCategories.length > 0
+                    ? evidenceCategories.map((c) => getEvidenceCategoryLabel(c)).join(' • ')
+                    : 'Biomechanic & Anatomy Inference'}
+                </Text>
               </Text>
               <Text style={styles.evidenceSubText}>
-                Modelled from surface EMG activation studies, musculoskeletal joint moment calculations, and biomechanical torque vectors.
+                Modelled from published surface EMG trials, inverse dynamic joint torque calculations, and kinematic movement analyses (e.g., Ebben et al. 2011, Contreras et al. 2012, Vigotsky et al. 2018). Quantitative figures and role coefficients represent modelled estimates of mechanical stimulus, not individualized clinical hypertrophy guarantees.
               </Text>
             </View>
 
@@ -184,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBg,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
-    maxHeight: '88%',
+    maxHeight: '90%',
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.cardBorder,
@@ -193,16 +236,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.cardBorder,
-    paddingBottom: spacing.sm,
-    marginBottom: spacing.md,
   },
   categoryLabel: {
     color: colors.accentPrimary,
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   title: {
     color: colors.textPrimary,
@@ -212,36 +254,38 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: spacing.xs,
+    backgroundColor: colors.bgSecondary,
+    borderRadius: borderRadius.sm,
   },
   closeBtnText: {
     color: colors.textMuted,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
   },
   body: {
-    flex: 1,
+    marginTop: spacing.sm,
   },
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: spacing.xs,
     marginBottom: spacing.md,
   },
   tag: {
-    backgroundColor: colors.bgSecondary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
     borderWidth: 1,
     borderColor: colors.cardBorder,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: colors.bgSecondary,
   },
   tagText: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     color: colors.textPrimary,
@@ -257,58 +301,78 @@ const styles = StyleSheet.create({
   cautionBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    padding: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.danger,
+    marginBottom: spacing.md,
   },
   cautionTitle: {
     color: colors.danger,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cautionText: {
     color: colors.textSecondary,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 16,
   },
   muscleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: colors.cardBorder,
   },
   muscleLeft: {
     flex: 1,
-    marginRight: spacing.sm,
+    paddingRight: spacing.sm,
   },
   muscleName: {
     color: colors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  evidenceBadgeSmall: {
+    borderWidth: 1,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  evidenceBadgeSmallText: {
+    fontSize: 8,
+    fontWeight: '700',
   },
   jointAction: {
-    color: colors.accentPrimary,
+    color: colors.textMuted,
     fontSize: 11,
+    marginTop: 1,
+  },
+  evidenceSourceTag: {
+    color: colors.accentPrimary,
+    fontSize: 9,
+    fontWeight: '600',
     marginTop: 2,
   },
   mappingNotes: {
-    color: colors.textMuted,
-    fontSize: 11,
+    color: colors.textSecondary,
+    fontSize: 10,
     marginTop: 2,
+    fontStyle: 'italic',
+    lineHeight: 14,
   },
   muscleRight: {
     alignItems: 'flex-end',
   },
   roleBadge: {
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    borderRadius: 4,
   },
   roleBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
   },
   coefficientText: {
@@ -319,36 +383,39 @@ const styles = StyleSheet.create({
   evidenceBox: {
     backgroundColor: colors.bgSecondary,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    padding: spacing.sm,
     borderWidth: 1,
     borderColor: colors.cardBorder,
+    marginBottom: spacing.md,
   },
   evidenceTitle: {
-    color: colors.textPrimary,
-    fontSize: 12,
+    color: colors.accentPrimary,
+    fontSize: 11,
     fontWeight: '700',
     marginBottom: 2,
   },
   evidenceText: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 16,
   },
   evidenceSubText: {
     color: colors.textMuted,
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 10,
     lineHeight: 15,
+    marginTop: 4,
   },
   compareBtn: {
-    backgroundColor: colors.accentPrimary,
-    paddingVertical: spacing.md,
+    backgroundColor: colors.bgSecondary,
     borderRadius: borderRadius.md,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.accentPrimary,
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   compareBtnText: {
-    color: colors.textInverse,
+    color: colors.accentPrimary,
     fontSize: 13,
     fontWeight: '700',
   },
