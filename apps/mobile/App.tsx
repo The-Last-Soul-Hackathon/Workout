@@ -40,6 +40,7 @@ export default function App() {
 
   // Navigation parameter states
   const [initialMuscleId, setInitialMuscleId] = useState<string | null>(null);
+  const [initialRoundId, setInitialRoundId] = useState<string | null>(null);
   const [selectedExerciseModal, setSelectedExerciseModal] = useState<Exercise | null>(null);
 
   // Comparison Modal state
@@ -76,6 +77,11 @@ export default function App() {
     setActiveTab('muscles');
   };
 
+  const handleNavigateToWorkouts = (roundId?: string) => {
+    if (roundId) setInitialRoundId(roundId);
+    setActiveTab('workouts');
+  };
+
   const handleCompareExercises = (exerciseA: Exercise, exerciseB: Exercise) => {
     setComparisonPair({ exerciseA, exerciseB });
   };
@@ -93,7 +99,7 @@ export default function App() {
               exposures={exposures}
               gaps={gaps}
               onNavigateToMuscles={handleNavigateToMuscles}
-              onNavigateToWorkouts={() => setActiveTab('workouts')}
+              onNavigateToWorkouts={handleNavigateToWorkouts}
               onNavigateToAnalysis={() => setActiveTab('analysis')}
             />
           )}
@@ -113,6 +119,7 @@ export default function App() {
           {activeTab === 'workouts' && (
             <WorkoutsScreen
               sessions={sessions}
+              initialRoundId={initialRoundId}
               onSessionFinished={handleSessionFinished}
             />
           )}
