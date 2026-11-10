@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Path, G, Rect, Text as SvgText } from 'react-native-svg';
-import { colors, spacing, borderRadius } from '../shared';
-import { MuscleExposure } from '../shared';
+import { colors, spacing, borderRadius, MuscleExposure, canonicalMuscles } from '../shared';
 
 interface AnatomyMapProps {
   exposures?: MuscleExposure[];
@@ -27,6 +26,13 @@ export const AnatomyMap: React.FC<AnatomyMapProps> = ({
     if (exp.status === 'above_target') return colors.coverageAbove;
     return colors.coverageBelow;
   };
+
+  const selectedExp = selectedMuscleId
+    ? exposures.find((e) => e.muscleId === selectedMuscleId)
+    : null;
+  const selectedMuscleObj = selectedMuscleId
+    ? canonicalMuscles.find((m) => m.id === selectedMuscleId)
+    : null;
 
   return (
     <View style={styles.container}>
@@ -419,6 +425,27 @@ export const AnatomyMap: React.FC<AnatomyMapProps> = ({
         </Svg>
       </View>
 
+      {/* Quick Selected Muscle Card */}
+      {selectedMuscleObj && (
+        <View style={styles.selectedMuscleBar}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.selectedMuscleName}>{selectedMuscleObj.name}</Text>
+            <Text style={styles.selectedMuscleMeta}>
+              {selectedExp ? `${selectedExp.totalExposure} sets logged` : '0 sets logged'} • Target: {selectedMuscleObj.defaultWeeklyTargetMin}-{selectedMuscleObj.defaultWeeklyTargetMax} sets/wk
+            </Text>
+          </View>
+          <View style={[styles.statusPill, { backgroundColor: getMuscleColor(selectedMuscleObj.id) }]}>
+            <Text style={styles.statusPillText}>
+              {selectedExp?.status === 'in_target'
+                ? 'IN TARGET'
+                : selectedExp?.status === 'above_target'
+                ? 'ABOVE'
+                : 'DEFICIT'}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Legend */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
@@ -501,5 +528,38 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '500',
+  },
+  selectedMuscleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgSecondary,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    width: '100%',
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  selectedMuscleName: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  selectedMuscleMeta: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.sm,
+  },
+  statusPillText: {
+    color: colors.textInverse,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });
