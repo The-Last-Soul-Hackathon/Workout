@@ -111,6 +111,8 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
       setNumber,
       reps: exercise.defaultUnit === 'reps' ? input.value : undefined,
       holdSeconds: exercise.defaultUnit === 'seconds' ? input.value : undefined,
+      distanceMeters: exercise.defaultUnit === 'meters' ? input.value : undefined,
+      flightsClimbed: exercise.defaultUnit === 'flights' ? input.value : undefined,
       side: input.side,
       rir: input.rir,
       restSeconds: 90,
@@ -207,7 +209,7 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                     <View key={s.id} style={styles.setRowHistory}>
                       <Text style={styles.setNumberLabel}>Set {s.setNumber}:</Text>
                       <Text style={styles.setRepVal}>
-                        {s.reps ? `${s.reps} reps` : `${s.holdSeconds}s`}
+                        {s.reps != null ? `${s.reps} reps` : s.holdSeconds != null ? `${s.holdSeconds}s` : s.distanceMeters != null ? `${s.distanceMeters}m` : s.flightsClimbed != null ? `${s.flightsClimbed} fl` : ''}
                       </Text>
                       {s.side !== 'bilateral' && (
                         <Text style={styles.setSideLabel}>({s.side})</Text>
@@ -224,7 +226,7 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                 {/* Quantity Control (+/-) */}
                 <View style={styles.controlRow}>
                   <Text style={styles.controlLabel}>
-                    {ex.defaultUnit === 'seconds' ? 'Hold Time (s)' : 'Reps'}:
+                    {ex.defaultUnit === 'seconds' ? 'Hold Time (s)' : ex.defaultUnit === 'meters' ? 'Distance (m)' : ex.defaultUnit === 'flights' ? 'Flights' : 'Reps'}:
                   </Text>
                   <View style={styles.counterBox}>
                     <TouchableOpacity
