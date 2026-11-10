@@ -104,18 +104,22 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
     const exerciseSets = session.sets.filter((s) => s.exerciseId === exercise.id);
     const setNumber = exerciseSets.length + 1;
 
+    const isMobility = exercise.category === 'mobility';
+    const isCardio = exercise.category === 'cardio';
+
     const newSet: SetLog = {
       id: `set_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       sessionId: session.id,
       exerciseId: exercise.id,
       setNumber,
-      reps: exercise.defaultUnit === 'reps' ? input.value : undefined,
-      holdSeconds: exercise.defaultUnit === 'seconds' ? input.value : undefined,
-      distanceMeters: exercise.defaultUnit === 'meters' ? input.value : undefined,
-      flightsClimbed: exercise.defaultUnit === 'flights' ? input.value : undefined,
+      reps: exercise.defaultUnit === 'reps' ? Math.max(1, input.value) : undefined,
+      holdSeconds: exercise.defaultUnit === 'seconds' ? Math.max(1, input.value) : undefined,
+      distanceMeters: exercise.defaultUnit === 'meters' ? Math.max(1, input.value) : undefined,
+      flightsClimbed: exercise.defaultUnit === 'flights' ? Math.max(1, input.value) : undefined,
       side: input.side,
-      rir: input.rir,
-      restSeconds: 90,
+      rir: isMobility || isCardio ? undefined : Math.min(5, Math.max(0, input.rir)),
+      rpe: isCardio ? Math.min(10, Math.max(1, 10 - input.rir)) : undefined,
+      restSeconds: isMobility ? 30 : 90,
       techniqueQuality: input.techniqueQuality,
       completedAt: new Date().toISOString(),
       synced: false,
@@ -287,36 +291,107 @@ export const LiveWorkoutLogger: React.FC<LiveWorkoutLoggerProps> = ({
                   </View>
                 </View>
 
-                {/* Effort / RIR Selector */}
-                <View style={styles.controlRow}>
-                  <Text style={styles.controlLabel}>RIR (Reps in Reserve):</Text>
-                  <View style={styles.rirButtonsRow}>
-                    {[0, 1, 2, 3].map((r) => (
-                      <TouchableOpacity
-                        key={r}
-                        style={[
-                          styles.rirBtn,
-                          input.rir === r && styles.rirBtnActive,
-                        ]}
-                        onPress={() =>
-                          setExerciseInputs((prev) => ({
-                            ...prev,
-                            [ex.id]: { ...input, rir: r },
-                          }))
-                        }
-                      >
-                        <Text
+                {/* Contextual Effort / Intensity Selector */}
+                {ex.category === 'mobility' ? (
+                  <View style={styles.controlRow}>
+                    <Text style={styles.controlLabel}>Stretch Depth:</Text>
+                    <View style={styles.rirButtonsRow}>
+                      {[
+                        { label: 'Gentle', val: 0 },
+                        { label: 'Moderate', val: 1 },
+                        { label: 'Deep End-Range', val: 2 },
+                      ].map((opt) => (
+                        <TouchableOpacity
+                          key={opt.val}
                           style={[
-                            styles.rirBtnText,
-                            input.rir === r && styles.rirBtnTextActive,
+                            styles.effortChip,
+                            input.rir === opt.val && styles.effortChipActive,
                           ]}
+                          onPress={() =>
+                            setExerciseInputs((prev) => ({
+                              ...prev,
+                              [ex.id]: { ...input, rir: opt.val },
+                            }))
+                          }
                         >
-                          {r}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text
+                            style={[
+                              styles.effortChipText,
+                              input.rir === opt.val && styles.effortChipTextActive,
+                            ]}
+                          >
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </View>
-                </View>
+                ) : ex.category === 'cardio' ? (
+                  <View style={styles.controlRow}>
+                    <Text style={styles.controlLabel}>Exertion (RPE 6-10):</Text>
+                    <View style={styles.rirButtonsRow}>
+                      {[6, 7, 8, 9, 10].map((rpe) => (
+                        <TouchableOpacity
+                          key={rpe}
+                          style={[
+                            styles.rirBtn,
+                            input.rir === (10 - rpe) && styles.rirBtnActive,
+                          ]}
+                          onPress={() =>
+                            setExerciseInputs((prev) => ({
+                              ...prev,
+                              [ex.id]: { ...input, rir: 10 - rpe },
+                            }))
+                          }
+                        >
+                          <Text
+                            style={[
+                              styles.rirBtnText,
+                              input.rir === (10 - rpe) && styles.rirBtnTextActive,
+                            ]}
+                          >
+                            {rpe}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.controlRow}>
+                    <Text style={styles.controlLabel}>RIR (Reps in Reserve):</Text>
+                    <View style={styles.rirButtonsRow}>
+                      {[
+                        { label: '0 (Max)', val: 0 },
+                        { label: '1', val: 1 },
+                        { label: '2', val: 2 },
+                        { label: '3+', val: 3 },
+                      ].map((item) => (
+                        <TouchableOpacity
+                          key={item.val}
+                          style={[
+                            styles.rirBtn,
+                            input.rir === item.val && styles.rirBtnActive,
+                          ]}
+                          onPress={() =>
+                            setExerciseInputs((prev) => ({
+                              ...prev,
+                              [ex.id]: { ...input, rir: item.val },
+                            }))
+                          }
+                        >
+                          <Text
+                            style={[
+                              styles.rirBtnText,
+                              input.rir === item.val && styles.rirBtnTextActive,
+                            ]}
+                          >
+                            {item.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
 
                 {/* Unilateral Side Selector if applicable */}
                 {ex.unilateral && (
@@ -647,6 +722,26 @@ const styles = StyleSheet.create({
   },
   rirBtnTextActive: {
     color: colors.textInverse,
+  },
+  effortChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  effortChipActive: {
+    backgroundColor: colors.info,
+    borderColor: colors.info,
+  },
+  effortChipText: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  effortChipTextActive: {
+    color: colors.textPrimary,
   },
   sideButtonsRow: {
     flexDirection: 'row',
