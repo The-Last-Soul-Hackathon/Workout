@@ -322,13 +322,29 @@ export function calculateWeeklyExposure(
     const targetMax = personalized ? personalized.max : m.defaultWeeklyTargetMax;
     const isTargetPersonalized = !!personalized;
 
-    let status: MuscleExposure['status'] = 'below_target';
-    if (totalResistanceExposure >= targetMin && totalResistanceExposure <= targetMax) {
-      status = 'in_target';
-    } else if (totalResistanceExposure > targetMax) {
-      status = 'above_target';
-    } else if (totalResistanceExposure === 0) {
-      status = 'below_target';
+    let status: MuscleExposure['status'] = 'unassessed';
+    if (qualifiedSetsCount === 0) {
+      status = 'unassessed';
+    } else if (qualifiedSetsCount < 6 || qualifiedSessionsCount < 2) {
+      // Sparse baseline data in window (calibration in progress)
+      if (totalResistanceExposure >= targetMin && totalResistanceExposure <= targetMax) {
+        status = 'in_target';
+      } else if (totalResistanceExposure > targetMax) {
+        status = 'above_target';
+      } else if (totalResistanceExposure > 0) {
+        status = 'below_target';
+      } else {
+        status = 'insufficient_data';
+      }
+    } else {
+      // Mature training window (>= 2 completed sessions, >= 6 sets)
+      if (totalResistanceExposure >= targetMin && totalResistanceExposure <= targetMax) {
+        status = 'in_target';
+      } else if (totalResistanceExposure > targetMax) {
+        status = 'above_target';
+      } else {
+        status = 'below_target';
+      }
     }
 
     // Unilateral pairing metrics
@@ -423,7 +439,7 @@ export function analyzeCoverageGaps(
   const gaps: CoverageGap[] = [];
 
   for (const exp of exposures) {
-    if (exp.totalExposure < exp.targetMin) {
+    if (exp.status === 'below_target') {
       const candidates = exercises.filter(
         (ex) =>
           ex.category !== 'cardio' &&
@@ -431,7 +447,38 @@ export function analyzeCoverageGaps(
           ex.muscleMappings.some((m) => m.muscleId === exp.muscleId && m.role === 'primary')
       );
 
+      // Sort candidate recommendations: beginner first, then intermediate, then advanced
+      const sortedCandidates = [...candidates].sort((a, b) => {
+        const diffRank: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3, elite: 4 };
+        return (diffRank[a.difficulty] || 2) - (diffRank[b.difficulty] || 2);
+      });
+
+      // Filter out candidates with complex unfulfilled prerequisites
+      const safeCandidates = sortedCandidates.filter((c) => {
+        if (!c.prerequisites || c.prerequisites.length === 0) return true;
+        return c.difficulty === 'beginner' || c.difficulty === 'intermediate';
+      });
+
+      // Ensure diverse movement patterns across suggested options
+      const diverseCandidates: Exercise[] = [];
+      const seenPatterns = new Set<string>();
+      for (const cand of safeCandidates.length > 0 ? safeCandidates : sortedCandidates) {
+        const pattern = cand.movementPatterns[0] || cand.category;
+        if (!seenPatterns.has(pattern)) {
+          diverseCandidates.push(cand);
+          seenPatterns.add(pattern);
+          if (diverseCandidates.length >= 3) break;
+        }
+      }
+
+      const contributingNames = exp.contributingExercises.map((c) => c.exerciseName);
       let reason = `Logged weekly exposure of ${exp.totalExposure} sets is below baseline target (${exp.targetMin}-${exp.targetMax} sets).`;
+      if (contributingNames.length > 0) {
+        reason += ` Contributing exercises in window: ${contributingNames.join(', ')}.`;
+      } else {
+        reason += ' No direct or indirect working sets recorded in the active calculation window.';
+      }
+
       if (exp.muscleId === 'hamstrings') {
         reason =
           'Knee-flexion hamstring work is underrepresented. Standard squats and lunges do not produce significant active hamstring shortening.';
@@ -456,7 +503,9 @@ export function analyzeCoverageGaps(
         exposure: exp.totalExposure,
         targetMin: exp.targetMin,
         reason,
-        suggestedExerciseIds: candidates.slice(0, 3).map((c) => c.id),
+        suggestedExerciseIds: (diverseCandidates.length > 0 ? diverseCandidates : sortedCandidates)
+          .slice(0, 3)
+          .map((c) => c.id),
         confidence: exp.confidence,
       });
     }
