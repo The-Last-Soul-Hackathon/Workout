@@ -134,8 +134,8 @@ export const canonicalExercises: Exercise[] = [
     equipment: ["bodyweight"],
     defaultUnit: 'reps',
     unilateral: false,
-    instructions: "Hands shoulder-width apart, rigid core plank. Lower chest until 2cm from floor with elbows at 45 degrees, press back to full lockout.",
-    safetyCautions: "Prevent hips from sagging; maintain glute tension.",
+    instructions: "Hands slightly wider than shoulder width, rigid core plank. Lower under controlled eccentric tempo until chest approaches floor (elbows tracked at ~45° in scapular plane), then press to full elbow lockout.",
+    safetyCautions: "Prevent hips from sagging; maintain glute and abdominal tension.",
     regressions: ["pushup_incline", "pushup_knee"],
     isCanonical: true,
     muscleMappings: [
@@ -146,7 +146,7 @@ export const canonicalExercises: Exercise[] = [
         jointAction: "horizontal adduction",
         evidenceCategory: 'emg_excitation_evidence',
         confidence: 'high',
-        notes: "Prime horizontal pusher (~65-75% BW load)."
+        notes: "Primary horizontal pusher. Biomechanical estimate: ~64% bodyweight ground reaction force at top lockout, ~69-75% at bottom inflection (Ebben et al. 2011; Suprak et al. 2011)."
       },
       {
         muscleId: 'deltoid_anterior',
