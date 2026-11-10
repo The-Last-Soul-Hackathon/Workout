@@ -333,27 +333,91 @@ export interface ModelOutput<T> {
   assumptions: string[];
   sourceIds: string[];
   generatedAt: string;
+  metadata?: Record<string, any>;
 }
 
 export type ExposureStatus = 'below_target' | 'in_target' | 'above_target' | 'not_assessed';
+
+export interface DateInterval {
+  start: string | Date;
+  end: string | Date;
+}
+
+export interface QualificationRules {
+  requireCompletedSession?: boolean; // default: true
+  excludeDegradedTechnique?: boolean; // default: false
+  minRir?: number; // e.g. 0.0
+  maxRir?: number; // e.g. 5.0 (excluding non-stimulative junk sets)
+  minRpe?: number; // e.g. 6.0
+  customSetPredicate?: (set: SetLog, session: WorkoutSession) => boolean;
+}
+
+export interface CoefficientRules {
+  primaryRoleCoefficient?: number; // default: use mapping.coefficient ?? 1.0
+  secondaryRoleCoefficient?: number; // default: use mapping.coefficient ?? 0.5
+  synergistRoleCoefficient?: number; // default: use mapping.coefficient ?? 0.5
+  stabiliserRoleCoefficient?: number; // default: use mapping.coefficient ?? 0.2
+  incidentalRoleCoefficient?: number; // default: 0.0 (excluded from volume)
+}
+
+export interface UnilateralAccountingConfig {
+  convention: 'paired_limb_equals_one' | 'direct_limb_stimulus';
+}
+
+export interface UserMuscleTarget {
+  muscleId: string;
+  targetMin: number;
+  targetMax: number;
+  notes?: string;
+}
+
+export interface WeeklyExposureOptions {
+  interval?: DateInterval;
+  timezone?: string; // e.g. 'UTC'
+  qualificationRules?: QualificationRules;
+  coefficientRules?: CoefficientRules;
+  unilateralConfig?: UnilateralAccountingConfig;
+  personalizedTargets?: UserMuscleTarget[] | Map<string, { min: number; max: number }> | Record<string, { min: number; max: number }>;
+}
+
+export interface UnilateralBreakdown {
+  leftSets: number;
+  rightSets: number;
+  bilateralSets: number;
+  pairedSets: number;
+  asymmetryDelta: number;
+}
+
+export interface ContributingExerciseExposure {
+  exerciseId: string;
+  exerciseName: string;
+  sets: number;
+  role: MuscleRole;
+  contribution: number;
+  evidenceCategory?: ScientificEvidenceCategory;
+  confidence?: EvidenceConfidence;
+  workloadType: 'resistance' | 'mobility' | 'conditioning';
+}
 
 export interface MuscleExposure {
   muscleId: string;
   muscleName: string;
   region: MuscleRegion;
-  directSets: number;
-  indirectSets: number;
-  totalExposure: number;
+  directSets: number; // Primary mover resistance sets
+  indirectSets: number; // Secondary / synergist mover resistance sets
+  stabiliserSets: number; // Stabiliser / isometric fixator resistance sets
+  mobilityWorkload: number; // Total mobility sets (or hold duration)
+  conditioningWorkload: number; // Total cardio conditioning sets
+  totalResistanceExposure: number; // directSets + indirectSets + stabiliserSets
+  totalExposure: number; // Backward-compatible alias for totalResistanceExposure
   status: ExposureStatus;
   targetMin: number;
   targetMax: number;
-  contributingExercises: Array<{
-    exerciseId: string;
-    exerciseName: string;
-    sets: number;
-    role: MuscleRole;
-    contribution: number;
-  }>;
+  isTargetPersonalized: boolean;
+  confidence: EvidenceConfidence;
+  evidenceCategories: ScientificEvidenceCategory[];
+  unilateralBreakdown: UnilateralBreakdown;
+  contributingExercises: ContributingExerciseExposure[];
 }
 
 export interface CoverageGap {
@@ -367,18 +431,41 @@ export interface CoverageGap {
   confidence: EvidenceConfidence;
 }
 
+export type SubstitutionFeasibility =
+  | 'direct_equivalent'
+  | 'regression_suitable'
+  | 'progression_suitable'
+  | 'partial_complement'
+  | 'biomechanically_incompatible';
+
+export interface MultidimensionalComparisonScores {
+  muscleRoleAndEvidence: number; // 0.0 - 1.0
+  movementPatternAndJointActions: number; // 0.0 - 1.0
+  romAndResistanceProfile: number; // 0.0 - 1.0
+  unilateralAndStabilityDemand: number; // 0.0 - 1.0
+  hierarchicalRelationship: number; // 0.0 - 1.0
+  compositeScore: number; // 0.0 - 1.0
+}
+
 export interface ExerciseComparison {
   exerciseA: Exercise;
   exerciseB: Exercise;
-  similarityScore: number; // 0.0 - 1.0
+  similarityScore: number; // compositeScore (0.0 - 1.0)
+  scores: MultidimensionalComparisonScores;
+  substitutionFeasibility: SubstitutionFeasibility;
   sharedMuscles: Array<{
     muscleId: string;
     muscleName: string;
     roleA: MuscleRole;
     roleB: MuscleRole;
+    evidenceA?: ScientificEvidenceCategory;
+    evidenceB?: ScientificEvidenceCategory;
   }>;
   distinctMusclesA: Array<{ muscleId: string; muscleName: string; role: MuscleRole }>;
   distinctMusclesB: Array<{ muscleId: string; muscleName: string; role: MuscleRole }>;
   mechanicalDifferences: string[];
+  jointActionDifferences: string[];
+  stabilityDifferences: string[];
   practicalRecommendation: string;
+  limitations: string[];
 }
