@@ -65,6 +65,10 @@ export const MuscleExplorerScreen: React.FC<MuscleExplorerScreenProps> = ({
         return { label: 'IN TARGET RANGE', bg: 'rgba(16, 185, 129, 0.15)', color: colors.coverageInTarget };
       case 'above_target':
         return { label: 'ABOVE TARGET', bg: 'rgba(129, 140, 248, 0.15)', color: colors.coverageAbove };
+      case 'insufficient_data':
+        return { label: 'CALIBRATING', bg: 'rgba(148, 163, 184, 0.15)', color: colors.textSecondary };
+      case 'unassessed':
+        return { label: 'UNASSESSED', bg: 'rgba(100, 116, 139, 0.15)', color: colors.textMuted };
       default:
         return { label: 'BELOW TARGET', bg: 'rgba(245, 158, 11, 0.15)', color: colors.coverageBelow };
     }

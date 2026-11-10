@@ -5,7 +5,22 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  LogBox,
 } from 'react-native';
+
+LogBox.ignoreLogs(['Unknown event handler property']);
+if (typeof window !== 'undefined' && window.console) {
+  const origError = console.error;
+  console.error = (...args: unknown[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Unknown event handler property')
+    ) {
+      return;
+    }
+    origError(...args);
+  };
+}
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
