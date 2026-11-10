@@ -13,7 +13,7 @@ export type MuscleRegion =
   | 'calves_feet'
   | 'neck';
 
-export type MuscleRole = 'primary' | 'secondary' | 'stabiliser' | 'incidental';
+export type MuscleRole = 'primary' | 'secondary' | 'synergist' | 'stabiliser' | 'incidental';
 
 export type MovementPattern =
   | 'vertical_pull'
@@ -115,7 +115,7 @@ export interface ExerciseMuscleMapping {
   role: MuscleRole;
   coefficient: number; // 1.0 = primary, 0.5 = synergist, 0.2 = stabiliser, 0.0 = incidental
   jointAction: string;
-  evidenceCategory: ScientificEvidenceCategory;
+  evidenceCategory?: ScientificEvidenceCategory;
   evidenceType?: 'direct_emg' | 'biomechanical_inference' | 'anatomy_inference' | 'intervention_study' | 'expert_consensus';
   confidence: EvidenceConfidence;
   confidenceScore?: number; // 0.0 - 1.0
@@ -249,7 +249,7 @@ export interface ResearchStudy {
   openAccessUrl?: string;
   isOpenAccess: boolean;
   isPeerReviewed: boolean;
-  evidenceCategory: ScientificEvidenceCategory;
+  evidenceCategory?: ScientificEvidenceCategory;
 }
 
 export interface StudyProtocol {
