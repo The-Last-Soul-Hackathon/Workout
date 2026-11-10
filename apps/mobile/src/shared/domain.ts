@@ -336,7 +336,13 @@ export interface ModelOutput<T> {
   metadata?: Record<string, any>;
 }
 
-export type ExposureStatus = 'below_target' | 'in_target' | 'above_target' | 'not_assessed';
+export type ExposureStatus =
+  | 'below_target'
+  | 'in_target'
+  | 'above_target'
+  | 'insufficient_data'
+  | 'unassessed'
+  | 'not_assessed';
 
 export interface DateInterval {
   start: string | Date;
