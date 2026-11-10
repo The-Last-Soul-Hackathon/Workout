@@ -88,7 +88,9 @@ export class ExerciseValidator {
       errors.push({ field: `muscleMappings[${index}].coefficient`, message: `Coefficient ${mapping.coefficient} must be between 0.0 and 1.0.`, severity: 'error' });
     }
 
-    if (!VALID_EVIDENCE_CATEGORIES.has(mapping.evidenceCategory)) {
+    const resolvedCategory = mapping.evidenceCategory || this.resolveEvidenceType(mapping.evidenceType);
+
+    if (!resolvedCategory || !VALID_EVIDENCE_CATEGORIES.has(resolvedCategory)) {
       errors.push({
         field: `muscleMappings[${index}].evidenceCategory`,
         message: `Invalid evidence category "${mapping.evidenceCategory}". Must match one of the 8 canonical categories.`,
@@ -101,5 +103,22 @@ export class ExerciseValidator {
     }
 
     return { errors, warnings };
+  }
+
+  public static resolveEvidenceType(type?: string): ScientificEvidenceCategory {
+    switch (type) {
+      case 'direct_emg':
+        return 'emg_excitation_evidence';
+      case 'biomechanical_inference':
+        return 'biomechanical_evidence';
+      case 'anatomy_inference':
+        return 'anatomical_evidence';
+      case 'intervention_study':
+        return 'longitudinal_hypertrophy';
+      case 'expert_consensus':
+        return 'expert_inference';
+      default:
+        return 'expert_inference';
+    }
   }
 }
